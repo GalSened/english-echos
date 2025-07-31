@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 class ElevenLabsService {
-  async speak(text: string, voiceId: string = "9BWtsMINqrJLrRacOk9x"): Promise<void> {
+  async speak(text: string, voiceId: string = "nBwlhHY26CjUa3imYVjB"): Promise<void> {
     try {
       const { data, error } = await supabase.functions.invoke('text-to-speech', {
         body: { text, voice: voiceId }
