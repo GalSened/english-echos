@@ -105,6 +105,41 @@ class SupabaseOpenAIService {
     }
   }
 
+  async generateTopics(userName: string, difficulty: string = "intermediate"): Promise<any[]> {
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-topics', {
+        body: { userName, difficulty }
+      });
+
+      if (error) {
+        throw new Error(`Topics generation service error: ${error.message}`);
+      }
+
+      return data.topics || [];
+    } catch (error) {
+      console.error('Error generating topics:', error);
+      // Return fallback topics
+      return [
+        {
+          title: "Daily Life",
+          description: "Talk about your daily routines and habits. What's your favorite part of the day?"
+        },
+        {
+          title: "Travel Dreams", 
+          description: "Share your travel experiences and dream destinations. Where would you like to go next?"
+        },
+        {
+          title: "Technology Today",
+          description: "Discuss how technology impacts your life. What's your favorite app or gadget?"
+        },
+        {
+          title: "Food & Culture",
+          description: "Talk about your favorite foods and cooking experiences. What dish represents your culture?"
+        }
+      ];
+    }
+  }
+
   private createFallbackAnalysis(userName: string): ConversationAnalysis {
     return {
       grammarErrors: [],

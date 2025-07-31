@@ -1,79 +1,61 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { BookOpen, Plus, Target } from "lucide-react";
+import { BookOpen, Plus, RefreshCw, Loader2, Sparkles } from "lucide-react";
+import { SupabaseOpenAIService } from "@/services/supabaseOpenaiService";
 
-interface Topic {
-  id: string;
+interface GeneratedTopic {
   title: string;
   description: string;
-  difficulty: "Beginner" | "Intermediate" | "Advanced";
-  focus: string[];
 }
 
 interface TopicSelectorProps {
   userName: string;
-  onTopicSelect: (topic: Topic | { title: string; description: string; isCustom: true }) => void;
+  onTopicSelect: (topic: { title: string; description: string; isCustom?: boolean }) => void;
 }
 
-const predefinedTopics: Topic[] = [
-  {
-    id: "greetings",
-    title: "Daily Greetings & Introductions",
-    description: "Learn how to introduce yourself, greet others, and make small talk",
-    difficulty: "Beginner",
-    focus: ["Pronunciation", "Basic vocabulary", "Social phrases"]
-  },
-  {
-    id: "restaurant",
-    title: "Restaurant & Food Ordering",
-    description: "Practice ordering food, asking about ingredients, and restaurant etiquette",
-    difficulty: "Intermediate",
-    focus: ["Food vocabulary", "Polite requests", "Asking questions"]
-  },
-  {
-    id: "job-interview",
-    title: "Job Interview Preparation",
-    description: "Master professional English for interviews and workplace communication",
-    difficulty: "Advanced",
-    focus: ["Professional language", "Confidence building", "Complex responses"]
-  },
-  {
-    id: "travel",
-    title: "Travel & Navigation",
-    description: "Essential phrases for traveling, asking directions, and booking accommodations",
-    difficulty: "Intermediate",
-    focus: ["Travel vocabulary", "Direction phrases", "Problem solving"]
-  },
-  {
-    id: "shopping",
-    title: "Shopping & Negotiations",
-    description: "Learn to shop, compare prices, and negotiate in English",
-    difficulty: "Intermediate",
-    focus: ["Numbers", "Comparisons", "Negotiation skills"]
-  },
-  {
-    id: "phone-calls",
-    title: "Phone Calls & Appointments",
-    description: "Practice making calls, scheduling appointments, and phone etiquette",
-    difficulty: "Advanced",
-    focus: ["Clear pronunciation", "Formal language", "Time expressions"]
-  }
-];
-
 export const TopicSelector = ({ userName, onTopicSelect }: TopicSelectorProps) => {
+  const [generatedTopics, setGeneratedTopics] = useState<GeneratedTopic[]>([]);
+  const [isLoadingTopics, setIsLoadingTopics] = useState(true);
   const [customTopic, setCustomTopic] = useState("");
   const [showCustom, setShowCustom] = useState(false);
+  const [aiService] = useState(() => new SupabaseOpenAIService());
 
-  const getDifficultyColor = (difficulty: Topic["difficulty"]) => {
-    switch (difficulty) {
-      case "Beginner": return "bg-secondary text-secondary-foreground";
-      case "Intermediate": return "bg-accent text-accent-foreground";
-      case "Advanced": return "bg-teacher text-teacher-foreground";
+  const loadTopics = async () => {
+    setIsLoadingTopics(true);
+    try {
+      const topics = await aiService.generateTopics(userName);
+      setGeneratedTopics(topics);
+    } catch (error) {
+      console.error('Error loading topics:', error);
+      // Fallback topics if generation fails
+      setGeneratedTopics([
+        {
+          title: "Daily Life & Routines",
+          description: "Share your daily habits and talk about what makes a typical day for you. What's your favorite part of the day?"
+        },
+        {
+          title: "Travel & Adventures",
+          description: "Discuss your travel experiences and dream destinations. Where would you love to visit and why?"
+        },
+        {
+          title: "Technology & Future",
+          description: "Talk about how technology impacts your life and what you think the future will look like."
+        },
+        {
+          title: "Food & Culture",
+          description: "Share your favorite foods, cooking experiences, and cultural traditions around meals."
+        }
+      ]);
+    } finally {
+      setIsLoadingTopics(false);
     }
   };
+
+  useEffect(() => {
+    loadTopics();
+  }, [userName]);
 
   const handleCustomTopicSubmit = () => {
     if (customTopic.trim()) {
@@ -85,54 +67,79 @@ export const TopicSelector = ({ userName, onTopicSelect }: TopicSelectorProps) =
     }
   };
 
+  const handleRefreshTopics = () => {
+    loadTopics();
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <div className="text-center">
         <h1 className="text-3xl font-bold mb-2">
           Hello {userName}! 👋
         </h1>
-        <p className="text-muted-foreground text-lg">
-          What would you like to practice today? Choose a topic or create your own.
+        <p className="text-muted-foreground text-lg mb-4">
+          Here are some fresh conversation topics generated just for you!
         </p>
+        <Button 
+          onClick={handleRefreshTopics}
+          disabled={isLoadingTopics}
+          variant="outline"
+          size="sm"
+          className="mb-4"
+        >
+          {isLoadingTopics ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <RefreshCw className="h-4 w-4 mr-2" />
+          )}
+          {isLoadingTopics ? "Generating..." : "Generate New Topics"}
+        </Button>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {predefinedTopics.map((topic) => (
-          <Card 
-            key={topic.id} 
-            className="cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.02] bg-gradient-to-br from-card to-muted/30"
-            onClick={() => onTopicSelect(topic)}
-          >
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between mb-2">
-                <BookOpen className="h-5 w-5 text-primary mt-1" />
-                <Badge className={getDifficultyColor(topic.difficulty)}>
-                  {topic.difficulty}
-                </Badge>
-              </div>
-              <CardTitle className="text-lg leading-tight">{topic.title}</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <p className="text-muted-foreground text-sm mb-3 leading-relaxed">
-                {topic.description}
-              </p>
-              <div className="space-y-2">
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Target className="h-3 w-3" />
-                  Focus areas:
+      {isLoadingTopics ? (
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            <Card key={i} className="animate-pulse">
+              <CardHeader className="pb-3">
+                <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                <div className="h-6 bg-muted rounded"></div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-2">
+                  <div className="h-3 bg-muted rounded"></div>
+                  <div className="h-3 bg-muted rounded w-5/6"></div>
+                  <div className="h-3 bg-muted rounded w-4/6"></div>
                 </div>
-                <div className="flex flex-wrap gap-1">
-                  {topic.focus.map((item, index) => (
-                    <Badge key={index} variant="outline" className="text-xs">
-                      {item}
-                    </Badge>
-                  ))}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {generatedTopics.map((topic, index) => (
+            <Card 
+              key={index} 
+              className="cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.02] bg-gradient-to-br from-card to-muted/30 border-2 hover:border-primary/50"
+              onClick={() => onTopicSelect(topic)}
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between mb-2">
+                  <Sparkles className="h-5 w-5 text-primary mt-1" />
+                  <div className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">
+                    AI Generated
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                <CardTitle className="text-lg leading-tight">{topic.title}</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  {topic.description}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
