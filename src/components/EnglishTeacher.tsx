@@ -14,7 +14,7 @@ import { ConversationMessage } from "./ConversationMessage";
 import { VoiceControls } from "./VoiceControls";
 import { TeacherAvatar } from "./TeacherAvatar";
 import { ErrorCorrection } from "./ErrorCorrection";
-import { ConversationAnalysis } from "./ConversationAnalysis";
+import { AdvancedConversationAnalysis } from "./AdvancedConversationAnalysis";
 import { StatusIndicator } from "./StatusIndicator";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
@@ -257,19 +257,51 @@ export const EnglishTeacher = () => {
         console.error('Error analyzing conversation:', error);
         // Proceed to analysis with a fallback
         setConversationAnalysis({
-          grammarErrors: [],
-          vocabularyImprovements: [],
-          pronunciationTips: ["Continue practicing to improve your pronunciation"],
-          overallFeedback: "Great job participating in the conversation!",
-          strengths: ["Engaged actively in the topic"],
-          areasToImprove: ["Keep practicing regularly"],
-          nextSteps: ["Try more conversations on different topics"],
-          scoreBreakdown: {
-            grammar: 7,
-            vocabulary: 7,
-            fluency: 7,
-            pronunciation: 7,
-            overall: 7
+          quantitativeMetrics: {
+            linguisticComplexity: {
+              lexicalDiversity: {score: 65, confidence: [55, 75], typeTokenRatio: 0.7, mtld: 45},
+              syntacticComplexity: {meanClauseLength: 8, subordinationIndex: 0.3, score: 60, confidence: [50, 70]},
+              morphologicalComplexity: {score: 65, confidence: [55, 75]},
+              phonologicalAwareness: {score: 70, confidence: [60, 80]}
+            },
+            proficiencyScores: {
+              grammarAccuracy: {score: 70, confidence: [60, 80], errorRate: 0.15},
+              lexicalSophistication: {score: 65, confidence: [55, 75], academicWordPercentage: 0.1},
+              fluencyMetrics: {score: 70, confidence: [60, 80], estimatedWPM: 120},
+              pronunciationAssessment: {score: 70, confidence: [60, 80]},
+              pragmaticCompetence: {score: 75, confidence: [65, 85]},
+              overallCEFR: {level: "B1", confidence: 0.7, score: 70}
+            }
+          },
+          errorAnalysis: {
+            morphosyntactic: [],
+            lexical: [],
+            phonological: [],
+            pragmatic: [],
+            transferErrors: []
+          },
+          learningAnalytics: {
+            cognitiveLoadAssessment: {level: "medium", indicators: ["Active participation"], recommendations: ["Continue regular practice"]},
+            interlanguageStage: {stage: "Intermediate", characteristics: ["Developing fluency"], nextDevelopmentalGoals: ["Increased accuracy"]},
+            fossilizationRisk: {riskLevel: "low", areas: [], preventionStrategies: ["Varied practice topics"]},
+            proximityZone: {currentLevel: "B1", targetLevel: "B2", optimalChallengeLevel: "B1+", scaffoldingNeeds: ["Structured feedback"]}
+          },
+          personalizedRecommendations: {
+            immediateFocus: [{skill: "Conversational fluency", activity: "Daily speaking practice", duration: "15 minutes", difficulty: "medium"}],
+            weeklyGoals: [{goal: "Increase vocabulary usage", measurableOutcome: "Use 10 new words", trackingMethod: "Daily journal"}],
+            resourceRecommendations: [{type: "Practice", resource: "Topic-based conversations", rationale: "Maintains engagement", priority: "high"}],
+            practiceSchedule: {frequency: "Daily", sessionLength: "15-20 minutes", optimalTiming: "Morning or evening"}
+          },
+          progressProjections: {
+            shortTerm: {timeframe: "1-2 weeks", expectedImprovements: ["Increased confidence"], keyMilestones: ["Consistent participation"]},
+            mediumTerm: {timeframe: "1-3 months", expectedImprovements: ["Better vocabulary usage"], keyMilestones: ["B2 level indicators"]},
+            longTerm: {timeframe: "6-12 months", expectedImprovements: ["Advanced fluency"], keyMilestones: ["C1 level achievement"]}
+          },
+          motivationalInsights: {
+            strengthsHighlight: ["Active participation in conversation"],
+            effortRecognition: ["Consistent practice", "Engaged learning attitude"],
+            encouragingFeedback: "Great job participating in the conversation!",
+            celebrationWorthy: ["Taking on conversation challenges"]
           }
         });
         setAppState('analysis');
@@ -530,7 +562,7 @@ export const EnglishTeacher = () => {
             </AlertDialogContent>
           </AlertDialog>
         </div>
-        <ConversationAnalysis
+        <AdvancedConversationAnalysis
           analysis={conversationAnalysis}
           userName={userInfo?.name || "Student"}
           topic={selectedTopic?.title || "English Practice"}

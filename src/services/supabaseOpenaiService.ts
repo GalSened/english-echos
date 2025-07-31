@@ -1,27 +1,51 @@
 import { supabase } from "@/integrations/supabase/client";
 
 interface ConversationAnalysis {
-  grammarErrors: {
-    error: string;
-    correction: string;
-    explanation: string;
-  }[];
-  vocabularyImprovements: {
-    word: string;
-    betterAlternatives: string[];
-    context: string;
-  }[];
-  pronunciationTips: string[];
-  overallFeedback: string;
-  strengths: string[];
-  areasToImprove: string[];
-  nextSteps: string[];
-  scoreBreakdown: {
-    grammar: number;
-    vocabulary: number;
-    fluency: number;
-    pronunciation: number;
-    overall: number;
+  quantitativeMetrics: {
+    linguisticComplexity: {
+      lexicalDiversity: {score: number, confidence: [number, number], typeTokenRatio: number, mtld: number};
+      syntacticComplexity: {meanClauseLength: number, subordinationIndex: number, score: number, confidence: [number, number]};
+      morphologicalComplexity: {score: number, confidence: [number, number]};
+      phonologicalAwareness: {score: number, confidence: [number, number]};
+    };
+    proficiencyScores: {
+      grammarAccuracy: {score: number, confidence: [number, number], errorRate: number};
+      lexicalSophistication: {score: number, confidence: [number, number], academicWordPercentage: number};
+      fluencyMetrics: {score: number, confidence: [number, number], estimatedWPM: number};
+      pronunciationAssessment: {score: number, confidence: [number, number]};
+      pragmaticCompetence: {score: number, confidence: [number, number]};
+      overallCEFR: {level: string, confidence: number, score: number};
+    };
+  };
+  errorAnalysis: {
+    morphosyntactic: Array<{error: string, correction: string, category: string, severity: string, frequency: number}>;
+    lexical: Array<{error: string, correction: string, category: string, severity: string, suggestion: string}>;
+    phonological: Array<{error: string, correction: string, phonemeIssue: string, articulationTip: string}>;
+    pragmatic: Array<{error: string, correction: string, context: string, culturalNote: string}>;
+    transferErrors: Array<{error: string, likelyL1Source: string, intervention: string}>;
+  };
+  learningAnalytics: {
+    cognitiveLoadAssessment: {level: string, indicators: string[], recommendations: string[]};
+    interlanguageStage: {stage: string, characteristics: string[], nextDevelopmentalGoals: string[]};
+    fossilizationRisk: {riskLevel: string, areas: string[], preventionStrategies: string[]};
+    proximityZone: {currentLevel: string, targetLevel: string, optimalChallengeLevel: string, scaffoldingNeeds: string[]};
+  };
+  personalizedRecommendations: {
+    immediateFocus: Array<{skill: string, activity: string, duration: string, difficulty: string}>;
+    weeklyGoals: Array<{goal: string, measurableOutcome: string, trackingMethod: string}>;
+    resourceRecommendations: Array<{type: string, resource: string, rationale: string, priority: string}>;
+    practiceSchedule: {frequency: string, sessionLength: string, optimalTiming: string};
+  };
+  progressProjections: {
+    shortTerm: {timeframe: string, expectedImprovements: string[], keyMilestones: string[]};
+    mediumTerm: {timeframe: string, expectedImprovements: string[], keyMilestones: string[]};
+    longTerm: {timeframe: string, expectedImprovements: string[], keyMilestones: string[]};
+  };
+  motivationalInsights: {
+    strengthsHighlight: string[];
+    effortRecognition: string[];
+    encouragingFeedback: string;
+    celebrationWorthy: string[];
   };
 }
 
@@ -154,19 +178,51 @@ class SupabaseOpenAIService {
 
   private createFallbackAnalysis(userName: string): ConversationAnalysis {
     return {
-      grammarErrors: [],
-      vocabularyImprovements: [],
-      pronunciationTips: ["Keep practicing to improve pronunciation"],
-      overallFeedback: `Great job participating in the conversation, ${userName}! Keep up the excellent work.`,
-      strengths: ["Engaged actively in the conversation", "Showed enthusiasm for learning"],
-      areasToImprove: ["Keep practicing regularly", "Try conversations on various topics"],
-      nextSteps: ["Continue daily practice", "Explore new vocabulary themes"],
-      scoreBreakdown: {
-        grammar: 7,
-        vocabulary: 7,
-        fluency: 7,
-        pronunciation: 7,
-        overall: 7
+      quantitativeMetrics: {
+        linguisticComplexity: {
+          lexicalDiversity: {score: 65, confidence: [55, 75], typeTokenRatio: 0.7, mtld: 45},
+          syntacticComplexity: {meanClauseLength: 8, subordinationIndex: 0.3, score: 60, confidence: [50, 70]},
+          morphologicalComplexity: {score: 65, confidence: [55, 75]},
+          phonologicalAwareness: {score: 70, confidence: [60, 80]}
+        },
+        proficiencyScores: {
+          grammarAccuracy: {score: 70, confidence: [60, 80], errorRate: 0.15},
+          lexicalSophistication: {score: 65, confidence: [55, 75], academicWordPercentage: 0.1},
+          fluencyMetrics: {score: 70, confidence: [60, 80], estimatedWPM: 120},
+          pronunciationAssessment: {score: 70, confidence: [60, 80]},
+          pragmaticCompetence: {score: 75, confidence: [65, 85]},
+          overallCEFR: {level: "B1", confidence: 0.7, score: 70}
+        }
+      },
+      errorAnalysis: {
+        morphosyntactic: [],
+        lexical: [],
+        phonological: [],
+        pragmatic: [],
+        transferErrors: []
+      },
+      learningAnalytics: {
+        cognitiveLoadAssessment: {level: "medium", indicators: ["Active participation"], recommendations: ["Continue regular practice"]},
+        interlanguageStage: {stage: "Intermediate", characteristics: ["Developing fluency"], nextDevelopmentalGoals: ["Increased accuracy"]},
+        fossilizationRisk: {riskLevel: "low", areas: [], preventionStrategies: ["Varied practice topics"]},
+        proximityZone: {currentLevel: "B1", targetLevel: "B2", optimalChallengeLevel: "B1+", scaffoldingNeeds: ["Structured feedback"]}
+      },
+      personalizedRecommendations: {
+        immediateFocus: [{skill: "Conversational fluency", activity: "Daily speaking practice", duration: "15 minutes", difficulty: "medium"}],
+        weeklyGoals: [{goal: "Increase vocabulary usage", measurableOutcome: "Use 10 new words", trackingMethod: "Daily journal"}],
+        resourceRecommendations: [{type: "Practice", resource: "Topic-based conversations", rationale: "Maintains engagement", priority: "high"}],
+        practiceSchedule: {frequency: "Daily", sessionLength: "15-20 minutes", optimalTiming: "Morning or evening"}
+      },
+      progressProjections: {
+        shortTerm: {timeframe: "1-2 weeks", expectedImprovements: ["Increased confidence"], keyMilestones: ["Consistent participation"]},
+        mediumTerm: {timeframe: "1-3 months", expectedImprovements: ["Better vocabulary usage"], keyMilestones: ["B2 level indicators"]},
+        longTerm: {timeframe: "6-12 months", expectedImprovements: ["Advanced fluency"], keyMilestones: ["C1 level achievement"]}
+      },
+      motivationalInsights: {
+        strengthsHighlight: [`Great effort in the conversation, ${userName}!`, "Active participation in discussion"],
+        effortRecognition: ["Consistent practice", "Engaged learning attitude"],
+        encouragingFeedback: `Excellent work in today's conversation, ${userName}! Your engagement shows real commitment to improvement.`,
+        celebrationWorthy: ["Taking on conversation challenges", "Maintaining consistent practice"]
       }
     };
   }
