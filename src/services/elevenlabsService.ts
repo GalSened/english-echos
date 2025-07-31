@@ -1,42 +1,32 @@
+import { supabase } from "@/integrations/supabase/client";
+
 class ElevenLabsService {
-  private apiKey: string;
-  private baseUrl = 'https://api.elevenlabs.io/v1';
-
-  constructor(apiKey: string) {
-    this.apiKey = apiKey;
-  }
-
   async speak(text: string, voiceId: string = "9BWtsMINqrJLrRacOk9x"): Promise<void> {
     try {
-      const response = await fetch(`${this.baseUrl}/text-to-speech/${voiceId}`, {
-        method: 'POST',
-        headers: {
-          'Accept': 'audio/mpeg',
-          'Content-Type': 'application/json',
-          'xi-api-key': this.apiKey,
-        },
-        body: JSON.stringify({
-          text,
-          model_id: 'eleven_multilingual_v2',
-          voice_settings: {
-            stability: 0.5,
-            similarity_boost: 0.8,
-            style: 0.2,
-            use_speaker_boost: true,
-          },
-        }),
+      const { data, error } = await supabase.functions.invoke('text-to-speech', {
+        body: { text, voice: voiceId }
       });
 
-      if (!response.ok) {
-        throw new Error(`ElevenLabs API error: ${response.status}`);
+      if (error) {
+        throw new Error(`ElevenLabs service error: ${error.message}`);
       }
 
-      const audioBuffer = await response.arrayBuffer();
+      if (!data?.audioContent) {
+        throw new Error('No audio content received');
+      }
+
+      // Convert base64 to audio and play
+      const binaryString = atob(data.audioContent);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+
       const audioContext = new AudioContext();
-      const decodedData = await audioContext.decodeAudioData(audioBuffer);
+      const audioBuffer = await audioContext.decodeAudioData(bytes.buffer);
       
       const source = audioContext.createBufferSource();
-      source.buffer = decodedData;
+      source.buffer = audioBuffer;
       source.connect(audioContext.destination);
       source.start(0);
 

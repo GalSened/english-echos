@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { WebSpeechService } from "@/services/webSpeechService";
 import { ElevenLabsService } from "@/services/elevenlabsService";
+import { SupabaseOpenAIService, ConversationAnalysis as AnalysisType, ErrorCorrection as ErrorType } from "@/services/supabaseOpenaiService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,7 +14,7 @@ import { VoiceControls } from "./VoiceControls";
 import { TeacherAvatar } from "./TeacherAvatar";
 import { ErrorCorrection } from "./ErrorCorrection";
 import { ConversationAnalysis } from "./ConversationAnalysis";
-import { OpenAIService, ConversationAnalysis as AnalysisType, ErrorCorrection as ErrorType } from "@/services/openaiService";
+
 import { Send, MessageCircle, BarChart3 } from "lucide-react";
 
 interface Message {
@@ -26,8 +27,6 @@ interface Message {
 
 interface UserInfo {
   name: string;
-  openAiKey: string;
-  elevenLabsKey?: string;
 }
 
 interface Topic {
@@ -48,7 +47,7 @@ export const EnglishTeacher = () => {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [conversationAnalysis, setConversationAnalysis] = useState<AnalysisType | null>(null);
-  const [openAIService, setOpenAIService] = useState<OpenAIService | null>(null);
+  const [openAIService, setOpenAIService] = useState<SupabaseOpenAIService | null>(null);
   const [webSpeechService, setWebSpeechService] = useState<WebSpeechService | null>(null);
   const [elevenLabsService, setElevenLabsService] = useState<ElevenLabsService | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -58,15 +57,17 @@ export const EnglishTeacher = () => {
     const speechService = new WebSpeechService();
     setWebSpeechService(speechService);
     
+    const aiService = new SupabaseOpenAIService();
+    setOpenAIService(aiService);
+    
+    const ttsService = new ElevenLabsService();
+    setElevenLabsService(ttsService);
+    
     const saved = localStorage.getItem('englishTeacher_userInfo');
     if (saved) {
       try {
         const savedUserInfo = JSON.parse(saved);
         setUserInfo(savedUserInfo);
-        setOpenAIService(new OpenAIService(savedUserInfo.openAiKey));
-        if (savedUserInfo.elevenLabsKey) {
-          setElevenLabsService(new ElevenLabsService(savedUserInfo.elevenLabsKey));
-        }
         setAppState('topic-selection');
       } catch (error) {
         console.error('Error loading saved user info:', error);
@@ -113,10 +114,6 @@ export const EnglishTeacher = () => {
 
   const handleUserSetupComplete = (newUserInfo: UserInfo) => {
     setUserInfo(newUserInfo);
-    setOpenAIService(new OpenAIService(newUserInfo.openAiKey));
-    if (newUserInfo.elevenLabsKey) {
-      setElevenLabsService(new ElevenLabsService(newUserInfo.elevenLabsKey));
-    }
     setAppState('topic-selection');
   };
 

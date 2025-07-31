@@ -9,24 +9,16 @@ import { User, Brain } from "lucide-react";
 interface UserSetupProps {
   onComplete: (userInfo: {
     name: string;
-    openAiKey: string;
-    elevenLabsKey?: string;
   }) => void;
 }
 
 export const UserSetup = ({ onComplete }: UserSetupProps) => {
   const [name, setName] = useState("");
-  const [openAiKey, setOpenAiKey] = useState("");
-  const [elevenLabsKey, setElevenLabsKey] = useState("");
 
   const handleSubmit = () => {
-    if (!name || !openAiKey) return;
+    if (!name) return;
 
-    const userInfo = {
-      name,
-      openAiKey,
-      elevenLabsKey: elevenLabsKey || undefined
-    };
+    const userInfo = { name };
 
     // Store user info in localStorage for this session
     localStorage.setItem('englishTeacher_userInfo', JSON.stringify(userInfo));
@@ -34,7 +26,7 @@ export const UserSetup = ({ onComplete }: UserSetupProps) => {
     onComplete(userInfo);
   };
 
-  const isComplete = name.trim() !== "" && openAiKey.trim() !== "";
+  const isComplete = name.trim() !== "";
 
   return (
     <div className="max-w-lg mx-auto p-6 space-y-6">
@@ -70,37 +62,13 @@ export const UserSetup = ({ onComplete }: UserSetupProps) => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Brain className="h-5 w-5" />
-            API Configuration
+            AI Features Ready
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="openai-key">OpenAI API Key *</Label>
-            <Input
-              id="openai-key"
-              type="password"
-              placeholder="sk-..."
-              value={openAiKey}
-              onChange={(e) => setOpenAiKey(e.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">
-              Required for AI conversation analysis and error correction
-            </p>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="elevenlabs-key">ElevenLabs API Key (Optional)</Label>
-            <Input
-              id="elevenlabs-key"
-              type="password"
-              placeholder="Optional - for humanized voice"
-              value={elevenLabsKey}
-              onChange={(e) => setElevenLabsKey(e.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">
-              Add for more natural, humanized teacher voice. Falls back to browser speech if not provided.
-            </p>
-          </div>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            ✅ AI conversation analysis and humanized voice are configured and ready to use through secure cloud services.
+          </p>
         </CardContent>
       </Card>
 
@@ -114,7 +82,7 @@ export const UserSetup = ({ onComplete }: UserSetupProps) => {
       </Button>
 
       <div className="text-xs text-muted-foreground text-center">
-        Your information is stored locally for this session. API keys are never shared.
+        Your name is stored locally for this session. AI features powered by secure cloud services.
       </div>
     </div>
   );
