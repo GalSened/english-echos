@@ -8,7 +8,7 @@ export const getOpenAIKey = async () => {
     .from('settings')
     .select('value')
     .eq('key', 'openai_api_key')
-    .single()
+    .maybeSingle()
   
   if (error && error.code !== 'PGRST116') {
     console.error('Error fetching OpenAI key:', error)
