@@ -97,7 +97,7 @@ export const EnglishTeacher = () => {
     }
     
     return id;
-  }, [webSpeechService]);
+  }, [elevenLabsService, webSpeechService]);
 
   const scrollToBottom = () => {
     if (scrollAreaRef.current) {
@@ -210,18 +210,25 @@ export const EnglishTeacher = () => {
             }
           }
           
-          // Generate teacher response
-          setTimeout(() => {
-            const responses = [
-              "That's interesting! Can you tell me more about that?",
-              "Good! How do you feel about what you just said?",
-              "I see. What else can you share about this topic?",
-              "Great! Can you explain that in a different way?",
-              "Nice! What's your opinion on this matter?"
-            ];
-            const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-            addMessage(randomResponse, true);
-          }, 1000);
+          // Generate intelligent teacher response using OpenAI
+          if (openAIService) {
+            try {
+              const teacherResponse = await openAIService.generateTeacherResponse(
+                transcript,
+                messages,
+                selectedTopic?.title || "",
+                userInfo?.name || "Student"
+              );
+              addMessage(teacherResponse, true);
+            } catch (error) {
+              console.error('Error generating teacher response:', error);
+              // Fallback to simple response
+              addMessage("That's interesting! Can you tell me more about that?", true);
+            }
+          } else {
+            // Fallback if service not available
+            addMessage("That's interesting! Can you tell me more about that?", true);
+          }
         }
       } catch (error) {
         console.error('Speech recognition error:', error);
@@ -260,18 +267,25 @@ export const EnglishTeacher = () => {
         }
       }
       
-      // Generate teacher response
-      setTimeout(() => {
-        const responses = [
-          "That's a great point! What made you think of that?",
-          "Interesting perspective! Can you elaborate?",
-          "I understand. How does this relate to your experience?",
-          "Good thinking! What else comes to mind?",
-          "Thank you for sharing that. What's next?"
-        ];
-        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-        addMessage(randomResponse, true);
-      }, 1000);
+      // Generate intelligent teacher response using OpenAI
+      if (openAIService) {
+        try {
+          const teacherResponse = await openAIService.generateTeacherResponse(
+            userMessage,
+            messages,
+            selectedTopic?.title || "",
+            userInfo?.name || "Student"
+          );
+          addMessage(teacherResponse, true);
+        } catch (error) {
+          console.error('Error generating teacher response:', error);
+          // Fallback to simple response
+          addMessage("That's interesting! Can you tell me more about that?", true);
+        }
+      } else {
+        // Fallback if service not available
+        addMessage("That's interesting! Can you tell me more about that?", true);
+      }
     }
   };
 

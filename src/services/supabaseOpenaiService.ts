@@ -79,6 +79,32 @@ class SupabaseOpenAIService {
     }
   }
 
+  async generateTeacherResponse(userMessage: string, conversationHistory: any[], topic: string, userName: string): Promise<string> {
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-teacher-response', {
+        body: { userMessage, conversationHistory, topic, userName }
+      });
+
+      if (error) {
+        throw new Error(`Teacher response service error: ${error.message}`);
+      }
+
+      return data.response;
+    } catch (error) {
+      console.error('Error generating teacher response:', error);
+      // Return fallback response
+      const fallbackResponses = [
+        "That's interesting! Can you tell me more about that?",
+        "I'd love to hear more about your thoughts on this.",
+        "That's a great point! What else can you share?",
+        "How do you feel about what you just mentioned?",
+        "Can you explain that a bit more?"
+      ];
+      
+      return fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
+    }
+  }
+
   private createFallbackAnalysis(userName: string): ConversationAnalysis {
     return {
       grammarErrors: [],
