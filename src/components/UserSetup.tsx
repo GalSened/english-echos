@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { TeacherAvatar } from "./TeacherAvatar";
-import { User, Brain, Target, BookOpen, Zap } from "lucide-react";
+import { User, Brain, Target, BookOpen, Zap, Home } from "lucide-react";
 
 interface UserSetupProps {
   onComplete: (userInfo: {
@@ -46,10 +46,8 @@ export const UserSetup = ({ onComplete }: UserSetupProps) => {
     if (!name) return;
 
     const userInfo = { name, level };
-
-    // Store user info in localStorage for this session
-    localStorage.setItem('englishTeacher_userInfo', JSON.stringify(userInfo));
     
+    // Session storage is handled in the parent component
     onComplete(userInfo);
   };
 
@@ -57,6 +55,19 @@ export const UserSetup = ({ onComplete }: UserSetupProps) => {
 
   return (
     <div className="max-w-lg mx-auto p-6 space-y-6">
+      {/* Main Page Button */}
+      <div className="flex justify-center mb-6">
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => window.location.reload()}
+          className="text-muted-foreground hover:text-foreground"
+        >
+          <Home className="h-4 w-4 mr-2" />
+          Return to Main Page
+        </Button>
+      </div>
+      
       <div className="text-center">
         <TeacherAvatar className="mx-auto mb-4" />
         <h1 className="text-3xl font-bold mb-2">Welcome to English Teacher</h1>

@@ -81,13 +81,10 @@ export const EnglishTeacher = () => {
         setMicrophonePermission(false);
       }
       
-      // Test ElevenLabs availability with a simple call
+      // Test ElevenLabs availability silently (background test)
       try {
-        // This will fail if API key is not configured
-        await ttsService.speak("test").catch(() => {
-          // Expected to fail for a test, but we can check if the service is configured
-        });
-        setElevenLabsAvailable(true);
+        const isAvailable = await ttsService.testService();
+        setElevenLabsAvailable(isAvailable);
       } catch (error) {
         console.log('ElevenLabs not available, will use browser speech');
         setElevenLabsAvailable(false);
@@ -96,7 +93,8 @@ export const EnglishTeacher = () => {
     
     initServices();
     
-    const saved = localStorage.getItem('englishTeacher_userInfo');
+    // Check for session-only user info (no persistence across browser sessions)
+    const saved = sessionStorage.getItem('englishTeacher_userInfo');
     if (saved) {
       try {
         const savedUserInfo = JSON.parse(saved);
@@ -104,6 +102,7 @@ export const EnglishTeacher = () => {
         setAppState('topic-selection');
       } catch (error) {
         console.error('Error loading saved user info:', error);
+        sessionStorage.removeItem('englishTeacher_userInfo');
       }
     }
   }, []);
@@ -213,10 +212,12 @@ export const EnglishTeacher = () => {
     scrollToBottom();
   }, [messages]);
 
-  const handleUserSetupComplete = (newUserInfo: UserInfo) => {
-    setUserInfo(newUserInfo);
+  const handleUserSetupComplete = useCallback((userInfo: UserInfo) => {
+    setUserInfo(userInfo);
+    // Store user info in sessionStorage (session-only, not persistent)
+    sessionStorage.setItem('englishTeacher_userInfo', JSON.stringify(userInfo));
     setAppState('topic-selection');
-  };
+  }, []);
 
   const handleTopicSelect = async (topic: Topic) => {
     setSelectedTopic(topic);
@@ -439,6 +440,9 @@ export const EnglishTeacher = () => {
     setAppState('setup');
     setConversationAnalysis(null);
     
+    // Clear session storage
+    sessionStorage.removeItem('englishTeacher_userInfo');
+    
     // Stop any ongoing speech
     if (webSpeechService) {
       webSpeechService.stopListening();
@@ -454,7 +458,11 @@ export const EnglishTeacher = () => {
 
   // Render different states
   if (appState === 'setup') {
-    return <UserSetup onComplete={handleUserSetupComplete} />;
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <UserSetup onComplete={handleUserSetupComplete} />
+      </div>
+    );
   }
 
   if (appState === 'topic-selection') {

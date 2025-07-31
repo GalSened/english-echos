@@ -101,6 +101,32 @@ class ElevenLabsService {
       this.currentAudio.playbackRate = Math.max(0.5, Math.min(2, rate));
     }
   }
+
+  // Background testing method - for debugging only, no audio output
+  async testService(): Promise<boolean> {
+    try {
+      console.log('ElevenLabs: Testing service availability...');
+      const { data, error } = await supabase.functions.invoke('text-to-speech', {
+        body: { text: "test", voice: "9BWtsMINqrJLrRacOk9x" }
+      });
+      
+      if (error) {
+        console.log('ElevenLabs: Service test failed -', error.message);
+        return false;
+      }
+      
+      if (data?.audioContent) {
+        console.log('ElevenLabs: Service test passed - audio content received');
+        return true;
+      }
+      
+      console.log('ElevenLabs: Service test failed - no audio content');
+      return false;
+    } catch (error) {
+      console.log('ElevenLabs: Service test error -', error);
+      return false;
+    }
+  }
 }
 
 export { ElevenLabsService };
