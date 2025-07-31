@@ -15,10 +15,11 @@ import { VoiceControls } from "./VoiceControls";
 import { TeacherAvatar } from "./TeacherAvatar";
 import { ErrorCorrection } from "./ErrorCorrection";
 import { AdvancedConversationAnalysis } from "./AdvancedConversationAnalysis";
+import { SystemMonitorDashboard } from "./SystemMonitorDashboard";
 import { StatusIndicator } from "./StatusIndicator";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
-import { Send, MessageCircle, BarChart3, AlertCircle, LogOut, Home } from "lucide-react";
+import { Send, MessageCircle, BarChart3, AlertCircle, LogOut, Home, Shield } from "lucide-react";
 
 interface Message {
   id: string;
@@ -57,6 +58,7 @@ export const EnglishTeacher = () => {
   const [elevenLabsService, setElevenLabsService] = useState<ElevenLabsService | null>(null);
   const [microphonePermission, setMicrophonePermission] = useState(false);
   const [elevenLabsAvailable, setElevenLabsAvailable] = useState(false);
+  const [showSystemMonitor, setShowSystemMonitor] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   // Initialize services on component mount
@@ -126,8 +128,8 @@ export const EnglishTeacher = () => {
         try {
           if (elevenLabsService) {
             try {
-              console.log('Attempting ElevenLabs speech...');
-              await elevenLabsService.speak(text);
+              console.log('Attempting ElevenLabs speech with Aria voice...');
+              await elevenLabsService.speak(text, "9BWtsMINqrJLrRacOk9x"); // Aria voice ID
               console.log('ElevenLabs speech completed successfully');
               return;
             } catch (error) {
@@ -720,6 +722,25 @@ export const EnglishTeacher = () => {
           </Card>
         </div>
       </div>
+
+      {/* System Monitor Dashboard */}
+      <SystemMonitorDashboard 
+        isVisible={showSystemMonitor}
+        onToggle={() => setShowSystemMonitor(!showSystemMonitor)}
+      />
+
+      {/* System Monitor Toggle (only show when not visible) */}
+      {!showSystemMonitor && (
+        <Button
+          onClick={() => setShowSystemMonitor(true)}
+          variant="outline"
+          size="sm"
+          className="fixed bottom-4 left-4 z-40"
+        >
+          <Shield className="h-4 w-4 mr-2" />
+          System Monitor
+        </Button>
+      )}
     </div>
   );
 };
