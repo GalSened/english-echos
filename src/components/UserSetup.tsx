@@ -55,8 +55,8 @@ export const UserSetup = ({ onComplete }: UserSetupProps) => {
 
   return (
     <div className="max-w-lg mx-auto p-6 space-y-6">
-      {/* Main Page Button */}
-      <div className="flex justify-center mb-6">
+      {/* Main Page Button - properly aligned */}
+      <div className="flex justify-center">
         <Button 
           variant="outline" 
           size="sm"

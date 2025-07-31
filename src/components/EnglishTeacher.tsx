@@ -472,7 +472,7 @@ export const EnglishTeacher = () => {
           <h2 className="text-2xl font-bold">Choose a Topic</h2>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="inline-flex items-center">
                 <LogOut className="h-4 w-4 mr-2" />
                 Exit
               </Button>
@@ -509,7 +509,7 @@ export const EnglishTeacher = () => {
           <h2 className="text-2xl font-bold">Conversation Analysis</h2>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="inline-flex items-center">
                 <Home className="h-4 w-4 mr-2" />
                 Return to Setup
               </Button>
@@ -574,19 +574,20 @@ export const EnglishTeacher = () => {
           />
           
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-4 space-y-3">
               <Button 
                 onClick={handleEndConversation}
                 variant="outline"
-                className="w-full mb-2"
+                className="w-full"
               >
                 <BarChart3 className="h-4 w-4 mr-2" />
                 End & Analyze
               </Button>
+              
               <Button 
                 onClick={handleNewTopic}
                 variant="outline"
-                className="w-full mb-2"
+                className="w-full"
                 size="sm"
               >
                 Change Topic
