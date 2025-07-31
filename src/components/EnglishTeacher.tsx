@@ -124,49 +124,74 @@ export const EnglishTeacher = () => {
       
       // Try ElevenLabs first, fallback to Web Speech
       const speakWithService = async () => {
-        if (elevenLabsService) {
-          try {
-            console.log('Attempting ElevenLabs speech...');
-            await elevenLabsService.speak(text);
-            console.log('ElevenLabs speech completed successfully');
-          } catch (error) {
-            console.error('ElevenLabs failed, falling back to Web Speech:', error);
-            toast({
-              title: "Voice Notice",
-              description: "Using browser voice (ElevenLabs unavailable)",
-              duration: 2000,
-            });
-            if (webSpeechService) {
-              try {
-                await webSpeechService.speak(text);
-                console.log('Web Speech fallback completed');
-              } catch (fallbackError) {
-                console.error('All speech services failed:', fallbackError);
+        try {
+          if (elevenLabsService) {
+            try {
+              console.log('Attempting ElevenLabs speech...');
+              await elevenLabsService.speak(text);
+              console.log('ElevenLabs speech completed successfully');
+              return;
+            } catch (error) {
+              console.error('ElevenLabs failed, falling back to Web Speech:', error);
+              toast({
+                title: "Voice Notice",
+                description: "Using browser voice (ElevenLabs unavailable)",
+                duration: 2000,
+              });
+              if (webSpeechService) {
+                try {
+                  await webSpeechService.speak(text);
+                  console.log('Web Speech fallback completed');
+                  return;
+                } catch (fallbackError) {
+                  console.error('All speech services failed:', fallbackError);
+                  toast({
+                    title: "Voice Error", 
+                    description: "All voice services failed. Check console for details.",
+                    variant: "destructive",
+                    duration: 3000,
+                  });
+                  throw fallbackError;
+                }
+              } else {
                 toast({
                   title: "Voice Error",
-                  description: "All voice services failed. Check console for details.",
-                  variant: "destructive",
+                  description: "No voice services available",
+                  variant: "destructive", 
                   duration: 3000,
                 });
+                throw error;
               }
             }
-          }
-        } else if (webSpeechService) {
-          try {
-            console.log('Using Web Speech service...');
-            await webSpeechService.speak(text);
-            console.log('Web Speech completed successfully');
-          } catch (error) {
-            console.error('Web Speech failed:', error);
+          } else if (webSpeechService) {
+            try {
+              console.log('Using Web Speech service...');
+              await webSpeechService.speak(text);
+              console.log('Web Speech completed successfully');
+            } catch (error) {
+              console.error('Web Speech failed:', error);
+              toast({
+                title: "Voice Error",
+                description: "Voice synthesis failed",
+                variant: "destructive",
+                duration: 3000,
+              });
+              throw error;
+            }
+          } else {
+            const errorMsg = "No voice services available";
+            console.error(errorMsg);
             toast({
               title: "Voice Error",
-              description: "Voice synthesis failed",
+              description: errorMsg,
               variant: "destructive",
               duration: 3000,
             });
+            throw new Error(errorMsg);
           }
+        } finally {
+          setIsSpeaking(false);
         }
-        setIsSpeaking(false);
       };
       
       speakWithService();
