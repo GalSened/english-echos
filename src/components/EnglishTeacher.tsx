@@ -16,8 +16,9 @@ import { TeacherAvatar } from "./TeacherAvatar";
 import { ErrorCorrection } from "./ErrorCorrection";
 import { ConversationAnalysis } from "./ConversationAnalysis";
 import { StatusIndicator } from "./StatusIndicator";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
-import { Send, MessageCircle, BarChart3, AlertCircle } from "lucide-react";
+import { Send, MessageCircle, BarChart3, AlertCircle, LogOut, Home } from "lucide-react";
 
 interface Message {
   id: string;
@@ -398,6 +399,27 @@ export const EnglishTeacher = () => {
     setAppState('topic-selection');
   };
 
+  const handleExitToSetup = useCallback(() => {
+    // Reset all state to start fresh
+    setUserInfo(null);
+    setSelectedTopic(null);
+    setMessages([]);
+    setAppState('setup');
+    setConversationAnalysis(null);
+    
+    // Stop any ongoing speech
+    if (webSpeechService) {
+      webSpeechService.stopListening();
+    }
+    setIsListening(false);
+    setIsSpeaking(false);
+    
+    toast({
+      title: "Session ended",
+      description: "You've been returned to the setup screen.",
+    });
+  }, [webSpeechService, toast]);
+
   // Render different states
   if (appState === 'setup') {
     return <UserSetup onComplete={handleUserSetupComplete} />;
@@ -405,23 +427,77 @@ export const EnglishTeacher = () => {
 
   if (appState === 'topic-selection') {
     return (
-      <TopicSelector 
-        userName={userInfo?.name || "Student"}
-        userLevel={userInfo?.level || 'intermediate'}
-        onTopicSelect={handleTopicSelect}
-      />
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Choose a Topic</h2>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <LogOut className="h-4 w-4 mr-2" />
+                Exit
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Exit Session</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to exit? This will end your current session and return you to the setup screen.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleExitToSetup}>
+                  Exit Session
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+        <TopicSelector 
+          userName={userInfo?.name || "Student"}
+          userLevel={userInfo?.level || 'intermediate'}
+          onTopicSelect={handleTopicSelect}
+        />
+      </div>
     );
   }
 
   if (appState === 'analysis' && conversationAnalysis) {
     return (
-      <ConversationAnalysis
-        analysis={conversationAnalysis}
-        userName={userInfo?.name || "Student"}
-        topic={selectedTopic?.title || "English Practice"}
-        onRestart={handleRestartSameTopic}
-        onNewTopic={handleNewTopic}
-      />
+      <div className="max-w-6xl mx-auto p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Conversation Analysis</h2>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Home className="h-4 w-4 mr-2" />
+                Return to Setup
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Return to Setup</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to return to the setup screen? This will end your current session.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleExitToSetup}>
+                  Return to Setup
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+        <ConversationAnalysis
+          analysis={conversationAnalysis}
+          userName={userInfo?.name || "Student"}
+          topic={selectedTopic?.title || "English Practice"}
+          onRestart={handleRestartSameTopic}
+          onNewTopic={handleNewTopic}
+        />
+      </div>
     );
   }
 
@@ -470,11 +546,38 @@ export const EnglishTeacher = () => {
               <Button 
                 onClick={handleNewTopic}
                 variant="outline"
-                className="w-full"
+                className="w-full mb-2"
                 size="sm"
               >
                 Change Topic
               </Button>
+              
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button 
+                    variant="outline"
+                    className="w-full"
+                    size="sm"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Exit Session
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Exit Session</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to exit? This will end your current conversation and return you to the setup screen.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleExitToSetup}>
+                      Exit Session
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </CardContent>
           </Card>
         </div>
