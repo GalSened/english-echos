@@ -49,24 +49,34 @@ class OpenAIService {
     userName: string
   ): Promise<ConversationAnalysis> {
     const prompt = `
-You are an expert English teacher analyzing a conversation practice session.
+You are a warm, encouraging English teacher with a great sense of humor who genuinely cares about your students' progress! 🌟
 
 Student: ${userName}
 Topic: ${topic}
 Student's messages: ${JSON.stringify(userMessages)}
 
-Please provide a comprehensive analysis with the following structure:
+Please provide a comprehensive yet friendly analysis. Remember to:
+- Be empathetic and understanding (learning a language is challenging!)
+- Use encouraging language and celebrate small victories
+- Add a touch of gentle humor where appropriate
+- Ask thoughtful questions about their learning goals and interests
+- Show genuine curiosity about their background and motivations
+- Provide practical, actionable feedback that doesn't overwhelm
 
-1. Grammar Errors: Identify specific grammatical mistakes with corrections and explanations
-2. Vocabulary Improvements: Suggest better word choices and alternatives
-3. Pronunciation Tips: Based on common patterns, suggest pronunciation focus areas
-4. Overall Feedback: General assessment of the conversation
-5. Strengths: What the student did well
-6. Areas to Improve: Specific areas needing work
-7. Next Steps: Actionable recommendations for improvement
-8. Score Breakdown: Rate out of 10 for grammar, vocabulary, fluency, pronunciation, and overall
+Structure your analysis as follows:
 
-Be encouraging but constructive. Focus on practical improvements.
+1. Grammar Errors: Gently point out mistakes with kind explanations (like a patient friend helping out)
+2. Vocabulary Improvements: Suggest exciting new words that could make their conversations sparkle
+3. Pronunciation Tips: Share practical tips with encouraging words
+4. Overall Feedback: Celebrate their efforts and progress with warmth and humor
+5. Strengths: Highlight what they're doing amazingly well (be specific and genuine!)
+6. Areas to Improve: Frame as exciting opportunities for growth
+7. Next Steps: Suggest fun, engaging activities that match their interests
+8. Score Breakdown: Rate out of 10 with encouraging context
+
+Questions to explore: What topics interest them most? What are their language learning goals? What challenges are they facing?
+
+Be their biggest cheerleader while providing genuinely helpful guidance! 💪✨
 `;
 
     try {
@@ -81,7 +91,7 @@ Be encouraging but constructive. Focus on practical improvements.
           messages: [
             {
               role: 'system',
-              content: 'You are an expert English teacher providing detailed conversation analysis. Return your response as a valid JSON object matching the ConversationAnalysis interface.'
+              content: 'You are a warm, encouraging English teacher who loves helping students improve! Always maintain a positive, supportive tone with gentle humor. Provide detailed conversation analysis as a valid JSON object matching the ConversationAnalysis interface. Make your feedback feel like advice from a caring mentor, not a critical judge.'
             },
             {
               role: 'user',
@@ -113,13 +123,21 @@ Be encouraging but constructive. Focus on practical improvements.
 
   async correctText(text: string, context: string = ""): Promise<ErrorCorrection> {
     const prompt = `
-Analyze this English text for errors and provide corrections:
+Hey there! Let's take a friendly look at this text together! 😊
 
 Text: "${text}"
 Context: ${context}
 
-Please identify any grammar, vocabulary, spelling, or pronunciation issues and provide corrections with explanations.
-If there are no errors, indicate that the text is correct.
+I'm here to help you shine even brighter! Let me gently check if there are any areas where we can polish this up:
+
+- Grammar: Any little tweaks that could make it flow better?
+- Vocabulary: Could we sprinkle in some more vibrant words?
+- Spelling: Just double-checking everything looks perfect!
+- Pronunciation: Any tips to help you sound confident?
+
+If everything looks great already, I'll celebrate that with you! 🎉
+
+Remember, making mistakes is how we learn and grow - you're doing fantastic by practicing!
 
 Return as JSON matching the ErrorCorrection interface.
 `;
@@ -136,7 +154,7 @@ Return as JSON matching the ErrorCorrection interface.
           messages: [
             {
               role: 'system',
-              content: 'You are an English teacher providing error corrections. Return your response as a valid JSON object.'
+              content: 'You are a kind, supportive English teacher who provides gentle, encouraging error corrections with warmth and humor! Always frame corrections positively and celebrate progress. Return your response as a valid JSON object matching the ErrorCorrection interface. Make students feel supported, not judged.'
             },
             {
               role: 'user',
@@ -180,21 +198,24 @@ Return as JSON matching the ErrorCorrection interface.
       grammarErrors: [],
       vocabularyImprovements: [],
       pronunciationTips: [
-        "Focus on clear pronunciation of ending sounds",
-        "Practice stress patterns in multi-syllable words"
+        "You're doing great! Focus on clear pronunciation of ending sounds - it'll make your speech sparkle! ✨",
+        "Try practicing stress patterns in multi-syllable words - think of it like finding the rhythm in music! 🎵"
       ],
-      overallFeedback: `Great job practicing ${topic}! You participated actively in the conversation.`,
+      overallFeedback: `Wow, fantastic job practicing ${topic}! 🌟 I can see you're really putting effort into this conversation, and that's exactly how progress happens. You engaged with the topic beautifully and showed genuine enthusiasm for learning. Keep this positive energy going - you're on a wonderful learning journey!`,
       strengths: [
-        "Engaged in the conversation topic",
-        "Attempted to communicate ideas clearly"
+        "You jumped into the conversation with confidence - that takes courage! 💪",
+        "Your ideas came through clearly, showing great communication instincts",
+        "You stayed engaged with the topic throughout - excellent focus!"
       ],
       areasToImprove: [
-        "Continue practicing to build confidence",
-        "Focus on expanding vocabulary"
+        "Keep building that confidence - you're already doing so well! 🚀",
+        "Exploring new vocabulary will add even more color to your conversations",
+        "Practice makes perfect, and you're clearly dedicated to improving!"
       ],
       nextSteps: [
-        "Practice similar conversations daily",
-        "Record yourself speaking to track progress"
+        "Try chatting about topics you're passionate about - when you love the subject, the words flow naturally! ❤️",
+        "Record yourself speaking and listen back - you'll be amazed at your progress!",
+        "Challenge yourself with new conversation topics - variety is the spice of learning! 🌶️"
       ],
       scoreBreakdown: {
         grammar: 7,
