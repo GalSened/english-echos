@@ -1,3 +1,4 @@
+// Updated: 2025-01-31 - Fixed Target reference error
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
