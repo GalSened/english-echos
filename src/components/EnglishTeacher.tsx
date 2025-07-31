@@ -341,15 +341,20 @@ export const EnglishTeacher = () => {
         // Add user message
         const userMsgId = addMessage(transcript, false);
         
-        // Check for errors using OpenAI
+        // Check for errors and provide fun spoken corrections
         if (openAIService) {
           try {
             const correction = await openAIService.correctText(transcript, selectedTopic?.title || "", userInfo?.level || "intermediate");
             
-            // Update message with correction
-            setMessages(prev => prev.map(msg => 
-              msg.id === userMsgId ? { ...msg, correction } : msg
-            ));
+            // If there are errors, speak a fun correction instead of showing UI
+            if (correction.hasErrors) {
+              const funCorrection = await openAIService.generateFunCorrection(
+                correction,
+                userInfo?.name || "Student"
+              );
+              // Don't add the correction to messages, just speak it
+              addMessage(funCorrection, true);
+            }
           } catch (error) {
             console.error('Error checking message:', error);
           }
@@ -407,15 +412,20 @@ export const EnglishTeacher = () => {
       // Add user message
       const userMsgId = addMessage(userMessage, false);
       
-      // Check for errors using OpenAI
+      // Check for errors and provide fun spoken corrections
       if (openAIService) {
         try {
           const correction = await openAIService.correctText(userMessage, selectedTopic?.title || "", userInfo?.level || "intermediate");
           
-          // Update message with correction
-          setMessages(prev => prev.map(msg => 
-            msg.id === userMsgId ? { ...msg, correction } : msg
-          ));
+          // If there are errors, speak a fun correction instead of showing UI
+          if (correction.hasErrors) {
+            const funCorrection = await openAIService.generateFunCorrection(
+              correction,
+              userInfo?.name || "Student"
+            );
+            // Don't add the correction to messages, just speak it
+            addMessage(funCorrection, true);
+          }
         } catch (error) {
           console.error('Error checking message:', error);
         }

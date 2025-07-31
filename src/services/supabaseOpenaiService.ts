@@ -141,6 +141,31 @@ class SupabaseOpenAIService {
     }
   }
 
+  async generateFunCorrection(correction: ErrorCorrection, userName: string): Promise<string> {
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-fun-correction', {
+        body: { correction, userName }
+      });
+
+      if (error) {
+        throw new Error(`Fun correction service error: ${error.message}`);
+      }
+
+      return data.response;
+    } catch (error) {
+      console.error('Error generating fun correction:', error);
+      // Return fallback fun correction
+      const errorCount = correction.errors.length;
+      const fallbackResponses = [
+        `Hey ${userName}! Quick tip - try saying "${correction.correctedText}" instead. It sounds more natural!`,
+        `${userName}, almost perfect! Just a tiny tweak: "${correction.correctedText}". You're doing great!`,
+        `Nice try ${userName}! Here's a smoother way: "${correction.correctedText}". Keep it up!`,
+      ];
+      
+      return fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
+    }
+  }
+
   async generateTopics(userName: string, difficulty: string = "intermediate"): Promise<any[]> {
     try {
       const { data, error } = await supabase.functions.invoke('generate-topics', {
