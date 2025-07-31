@@ -1,5 +1,5 @@
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -8,12 +8,30 @@ import { Sun, Moon, Monitor, Palette } from "lucide-react";
 export const ThemeSelector = () => {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Prevent hydration mismatch
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
 
   if (!mounted) {
     return null;
@@ -43,11 +61,16 @@ export const ThemeSelector = () => {
   const currentTheme = themes.find(t => t.value === theme);
   const CurrentIcon = currentTheme?.icon || Palette;
 
+  const handleThemeChange = (newTheme: string) => {
+    setTheme(newTheme);
+    setIsOpen(false);
+  };
+
   return (
     <div 
+      ref={dropdownRef}
       className="relative"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={() => setIsOpen(true)}
     >
       {/* Trigger Element */}
       <div className="flex items-center gap-2 p-2 rounded-lg bg-card/90 backdrop-blur-sm border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors">
@@ -56,7 +79,7 @@ export const ThemeSelector = () => {
       </div>
 
       {/* Dropdown Menu */}
-      {isHovered && (
+      {isOpen && (
         <div className="absolute top-full right-0 mt-2 z-50">
           <Card className="w-64 shadow-lg border-border/50 backdrop-blur-sm bg-card border">
             <CardHeader className="pb-2 pt-3 px-3">
@@ -68,7 +91,7 @@ export const ThemeSelector = () => {
             <CardContent className="px-3 pb-3">
               <RadioGroup
                 value={theme}
-                onValueChange={setTheme}
+                onValueChange={handleThemeChange}
                 className="space-y-1"
               >
                 {themes.map((themeOption) => {
