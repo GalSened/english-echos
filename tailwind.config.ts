@@ -52,6 +52,14 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				teacher: {
+					DEFAULT: 'hsl(var(--teacher))',
+					foreground: 'hsl(var(--teacher-foreground))'
+				},
+				speaking: {
+					DEFAULT: 'hsl(var(--speaking))',
+					glow: 'hsl(var(--speaking-glow))'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
@@ -84,11 +92,31 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'pulse-glow': {
+					'0%, 100%': {
+						opacity: '0.3',
+						transform: 'scale(1)'
+					},
+					'50%': {
+						opacity: '0.6',
+						transform: 'scale(1.05)'
+					}
+				},
+				'speaking-wave': {
+					'0%, 100%': {
+						transform: 'scaleY(1)'
+					},
+					'50%': {
+						transform: 'scaleY(1.5)'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
+				'speaking-wave': 'speaking-wave 0.6s ease-in-out infinite'
 			}
 		}
 	},
