@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
 import { UserSetup } from "./UserSetup";
 import { TopicSelector } from "./TopicSelector";
 import { ConversationMessage } from "./ConversationMessage";
@@ -14,8 +15,9 @@ import { VoiceControls } from "./VoiceControls";
 import { TeacherAvatar } from "./TeacherAvatar";
 import { ErrorCorrection } from "./ErrorCorrection";
 import { ConversationAnalysis } from "./ConversationAnalysis";
+import { StatusIndicator } from "./StatusIndicator";
 
-import { Send, MessageCircle, BarChart3 } from "lucide-react";
+import { Send, MessageCircle, BarChart3, AlertCircle } from "lucide-react";
 
 interface Message {
   id: string;
@@ -39,6 +41,7 @@ interface Topic {
 type AppState = 'setup' | 'topic-selection' | 'conversation' | 'analysis';
 
 export const EnglishTeacher = () => {
+  const { toast } = useToast();
   const [appState, setAppState] = useState<AppState>('setup');
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
@@ -51,18 +54,46 @@ export const EnglishTeacher = () => {
   const [openAIService, setOpenAIService] = useState<SupabaseOpenAIService | null>(null);
   const [webSpeechService, setWebSpeechService] = useState<WebSpeechService | null>(null);
   const [elevenLabsService, setElevenLabsService] = useState<ElevenLabsService | null>(null);
+  const [microphonePermission, setMicrophonePermission] = useState(false);
+  const [elevenLabsAvailable, setElevenLabsAvailable] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   // Initialize services on component mount
   useEffect(() => {
-    const speechService = new WebSpeechService();
-    setWebSpeechService(speechService);
+    const initServices = async () => {
+      const speechService = new WebSpeechService();
+      setWebSpeechService(speechService);
+      
+      const aiService = new SupabaseOpenAIService();
+      setOpenAIService(aiService);
+      
+      const ttsService = new ElevenLabsService();
+      setElevenLabsService(ttsService);
+      
+      // Check microphone permission
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        setMicrophonePermission(true);
+        stream.getTracks().forEach(track => track.stop()); // Stop the stream immediately
+      } catch (error) {
+        console.log('Microphone permission not granted yet');
+        setMicrophonePermission(false);
+      }
+      
+      // Test ElevenLabs availability with a simple call
+      try {
+        // This will fail if API key is not configured
+        await ttsService.speak("test").catch(() => {
+          // Expected to fail for a test, but we can check if the service is configured
+        });
+        setElevenLabsAvailable(true);
+      } catch (error) {
+        console.log('ElevenLabs not available, will use browser speech');
+        setElevenLabsAvailable(false);
+      }
+    };
     
-    const aiService = new SupabaseOpenAIService();
-    setOpenAIService(aiService);
-    
-    const ttsService = new ElevenLabsService();
-    setElevenLabsService(ttsService);
+    initServices();
     
     const saved = localStorage.getItem('englishTeacher_userInfo');
     if (saved) {
@@ -89,12 +120,55 @@ export const EnglishTeacher = () => {
     // If it's a teacher message, speak it
     if (isTeacher) {
       setIsSpeaking(true);
-      const speechService = elevenLabsService || webSpeechService;
-      if (speechService) {
-        speechService.speak(text).finally(() => {
-          setIsSpeaking(false);
-        });
-      }
+      
+      // Try ElevenLabs first, fallback to Web Speech
+      const speakWithService = async () => {
+        if (elevenLabsService) {
+          try {
+            console.log('Attempting ElevenLabs speech...');
+            await elevenLabsService.speak(text);
+            console.log('ElevenLabs speech completed successfully');
+          } catch (error) {
+            console.error('ElevenLabs failed, falling back to Web Speech:', error);
+            toast({
+              title: "Voice Notice",
+              description: "Using browser voice (ElevenLabs unavailable)",
+              duration: 2000,
+            });
+            if (webSpeechService) {
+              try {
+                await webSpeechService.speak(text);
+                console.log('Web Speech fallback completed');
+              } catch (fallbackError) {
+                console.error('All speech services failed:', fallbackError);
+                toast({
+                  title: "Voice Error",
+                  description: "All voice services failed. Check console for details.",
+                  variant: "destructive",
+                  duration: 3000,
+                });
+              }
+            }
+          }
+        } else if (webSpeechService) {
+          try {
+            console.log('Using Web Speech service...');
+            await webSpeechService.speak(text);
+            console.log('Web Speech completed successfully');
+          } catch (error) {
+            console.error('Web Speech failed:', error);
+            toast({
+              title: "Voice Error",
+              description: "Voice synthesis failed",
+              variant: "destructive",
+              duration: 3000,
+            });
+          }
+        }
+        setIsSpeaking(false);
+      };
+      
+      speakWithService();
     }
     
     return id;
@@ -187,55 +261,74 @@ export const EnglishTeacher = () => {
   };
 
   const handleStartListening = async () => {
-    if (webSpeechService) {
-      try {
-        setIsListening(true);
-        const transcript = await webSpeechService.startListening();
-        setIsListening(false);
+    if (!webSpeechService) {
+      addMessage("Speech recognition is not available on this browser.", true);
+      return;
+    }
+
+    try {
+      // Request microphone permission
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      setIsListening(true);
+      console.log('Starting speech recognition...');
+      
+      const transcript = await webSpeechService.startListening();
+      setIsListening(false);
+      
+      console.log('Speech recognition result:', transcript);
+      
+      if (transcript.trim()) {
+        // Add user message
+        const userMsgId = addMessage(transcript, false);
         
-        if (transcript.trim()) {
-          // Add user message
-          const userMsgId = addMessage(transcript, false);
-          
-          // Check for errors using OpenAI
-          if (openAIService) {
-            try {
-              const correction = await openAIService.correctText(transcript, selectedTopic?.title || "", userInfo?.level || "intermediate");
-              
-              // Update message with correction
-              setMessages(prev => prev.map(msg => 
-                msg.id === userMsgId ? { ...msg, correction } : msg
-              ));
-            } catch (error) {
-              console.error('Error checking message:', error);
-            }
-          }
-          
-          // Generate intelligent teacher response using OpenAI
-          if (openAIService) {
-            try {
-              const teacherResponse = await openAIService.generateTeacherResponse(
-                transcript,
-                messages,
-                selectedTopic?.title || "",
-                userInfo?.name || "Student",
-                userInfo?.level || "intermediate"
-              );
-              addMessage(teacherResponse, true);
-            } catch (error) {
-              console.error('Error generating teacher response:', error);
-              // Fallback to simple response
-              addMessage("That's interesting! Can you tell me more about that?", true);
-            }
-          } else {
-            // Fallback if service not available
-            addMessage("That's interesting! Can you tell me more about that?", true);
+        // Check for errors using OpenAI
+        if (openAIService) {
+          try {
+            const correction = await openAIService.correctText(transcript, selectedTopic?.title || "", userInfo?.level || "intermediate");
+            
+            // Update message with correction
+            setMessages(prev => prev.map(msg => 
+              msg.id === userMsgId ? { ...msg, correction } : msg
+            ));
+          } catch (error) {
+            console.error('Error checking message:', error);
           }
         }
-      } catch (error) {
-        console.error('Speech recognition error:', error);
-        setIsListening(false);
-        addMessage("Sorry, I couldn't hear you clearly. Please try again or type your message.", true);
+        
+        // Generate intelligent teacher response using OpenAI
+        if (openAIService) {
+          try {
+            const teacherResponse = await openAIService.generateTeacherResponse(
+              transcript,
+              messages,
+              selectedTopic?.title || "",
+              userInfo?.name || "Student",
+              userInfo?.level || "intermediate"
+            );
+            addMessage(teacherResponse, true);
+          } catch (error) {
+            console.error('Error generating teacher response:', error);
+            // Fallback to simple response
+            addMessage("That's interesting! Can you tell me more about that?", true);
+          }
+        } else {
+          // Fallback if service not available
+          addMessage("That's interesting! Can you tell me more about that?", true);
+        }
+      } else {
+        addMessage("I didn't catch that. Could you please speak a bit louder or try again?", true);
+      }
+    } catch (error) {
+      console.error('Speech recognition error:', error);
+      setIsListening(false);
+      
+      if (error.name === 'NotAllowedError') {
+        addMessage("Please allow microphone access to use voice features. You can enable it in your browser settings.", true);
+      } else if (error.message.includes('not-allowed')) {
+        addMessage("Microphone access was denied. Please check your browser settings and try again.", true);
+      } else {
+        addMessage("Sorry, I couldn't hear you clearly. Please try again or check your microphone settings.", true);
       }
     }
   };
@@ -349,6 +442,12 @@ export const EnglishTeacher = () => {
       <div className="grid lg:grid-cols-4 gap-6">
         {/* Voice Controls Sidebar */}
         <div className="lg:col-span-1 space-y-4">
+          <StatusIndicator
+            webSpeechSupported={webSpeechService?.isSupported() || false}
+            elevenLabsAvailable={elevenLabsAvailable}
+            microphonePermission={microphonePermission}
+          />
+          
           <VoiceControls
             volume={volume}
             onVolumeChange={handleVolumeChange}
