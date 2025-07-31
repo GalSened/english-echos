@@ -381,23 +381,22 @@ export const EnglishTeacher = () => {
 
               <Separator />
               
-              <div className="p-4">
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Type your message in English..."
-                    value={currentInput}
-                    onChange={(e) => setCurrentInput(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                    className="flex-1"
-                  />
-                  <Button 
-                    onClick={handleSendMessage}
-                    disabled={!currentInput.trim()}
-                    size="icon"
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
+              <div className="p-4 text-center">
+                <Button 
+                  onClick={isListening ? handleStopListening : handleStartListening}
+                  disabled={!webSpeechService?.isSupported()}
+                  size="lg"
+                  className={`px-8 py-6 text-lg font-medium transition-all ${
+                    isListening 
+                      ? "bg-destructive hover:bg-destructive/90 animate-pulse" 
+                      : "bg-primary hover:bg-primary/90"
+                  }`}
+                >
+                  {isListening ? "🎤 Listening..." : "🎤 Speak to respond"}
+                </Button>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Click the button and speak your response
+                </p>
               </div>
             </CardContent>
           </Card>
