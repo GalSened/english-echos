@@ -224,8 +224,8 @@ export const EnglishTeacher = () => {
     setMessages([]); // Clear previous messages
     setAppState('conversation');
     
-    // Add welcome message
-    addMessage(`Hello ${userInfo?.name}! I'm excited to practice "${topic.title}" with you today. ${topic.description}`, true);
+    // Add brief welcome message - student should be the main speaker
+    addMessage(`Hi ${userInfo?.name}! Ready to talk about ${topic.title}?`, true);
   };
 
   const handleEndConversation = async () => {
@@ -337,7 +337,7 @@ export const EnglishTeacher = () => {
           } catch (error) {
             console.error('Error generating teacher response:', error);
             // Fallback to simple response
-            addMessage("That's interesting! Can you tell me more about that?", true);
+            addMessage("Tell me more!", true);
           }
         } else {
           // Fallback if service not available
@@ -407,7 +407,7 @@ export const EnglishTeacher = () => {
         }
       } else {
         // Fallback if service not available
-        addMessage("That's interesting! Can you tell me more about that?", true);
+        addMessage("What else?", true);
       }
     }
   };
