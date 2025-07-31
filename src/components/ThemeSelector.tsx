@@ -40,18 +40,18 @@ export const ThemeSelector = () => {
   ];
 
   return (
-    <Card className="w-80 shadow-lg border-border/50 backdrop-blur-sm bg-card/95">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Moon className="h-4 w-4" />
-          Theme Preference
+    <Card className="w-64 shadow-md border-border/50 backdrop-blur-sm bg-card/95">
+      <CardHeader className="pb-2 pt-3 px-3">
+        <CardTitle className="flex items-center gap-2 text-sm">
+          <Moon className="h-3 w-3" />
+          Theme
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-3 pb-3">
         <RadioGroup
           value={theme}
           onValueChange={setTheme}
-          className="space-y-2"
+          className="space-y-1"
         >
           {themes.map((themeOption) => {
             const Icon = themeOption.icon;
@@ -61,7 +61,7 @@ export const ThemeSelector = () => {
               <div
                 key={themeOption.value}
                 className={`
-                  relative flex items-center space-x-3 rounded-md border p-3 cursor-pointer
+                  relative flex items-center space-x-2 rounded-md border p-2 cursor-pointer
                   transition-all duration-200 hover:bg-muted/50
                   ${isSelected 
                     ? 'border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20' 
@@ -75,7 +75,7 @@ export const ThemeSelector = () => {
                   className="shrink-0"
                 />
                 <Icon 
-                  className={`h-4 w-4 shrink-0 ${
+                  className={`h-3 w-3 shrink-0 ${
                     isSelected ? 'text-primary' : 'text-muted-foreground'
                   }`} 
                 />
@@ -83,16 +83,11 @@ export const ThemeSelector = () => {
                   htmlFor={themeOption.value}
                   className="flex-1 cursor-pointer"
                 >
-                  <div className="flex flex-col">
-                    <span className={`text-sm font-medium ${
-                      isSelected ? 'text-foreground' : 'text-foreground'
-                    }`}>
-                      {themeOption.label}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {themeOption.description}
-                    </span>
-                  </div>
+                  <span className={`text-xs font-medium ${
+                    isSelected ? 'text-foreground' : 'text-foreground'
+                  }`}>
+                    {themeOption.label}
+                  </span>
                 </Label>
                 {isSelected && (
                   <div className="absolute inset-0 rounded-md ring-2 ring-primary/30 pointer-events-none animate-pulse" />
