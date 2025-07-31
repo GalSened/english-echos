@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { text, context = "" } = await req.json();
+    const { text, context = "", userLevel = "intermediate" } = await req.json();
 
     const openAIKey = Deno.env.get('OPENAI_API_KEY');
     
@@ -33,11 +33,37 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are an expert English teacher and linguist providing comprehensive analysis for English learners. Analyze the text for multiple aspects of English proficiency and provide educational feedback.
+            content: `You are an expert English teacher and linguist providing comprehensive analysis for ${userLevel} level English learners. Analyze the text for multiple aspects of English proficiency and provide educational feedback tailored to their proficiency level.
+
+LEVEL-SPECIFIC ANALYSIS APPROACH:
+
+BEGINNER Level:
+- Focus on basic grammar errors (verb tense, subject-verb agreement)
+- Point out fundamental vocabulary issues
+- Be very encouraging and gentle
+- Explain concepts in simple terms
+- Suggest basic pronunciation rules
+- Provide simple alternatives
+
+INTERMEDIATE Level:
+- Address more complex grammar structures
+- Suggest vocabulary improvements and synonyms
+- Explain cultural context when relevant
+- Help with naturalness and fluency
+- Provide detailed explanations
+- Challenge them to use more sophisticated language
+
+ADVANCED Level:
+- Focus on nuanced errors and style improvements
+- Suggest more sophisticated vocabulary and expressions
+- Explain subtle grammatical distinctions
+- Address cultural and contextual appropriateness
+- Help them sound more like native speakers
+- Provide advanced speaking strategies
 
 Your analysis should include:
-1. Grammar errors with clear explanations
-2. Vocabulary improvements with natural alternatives
+1. Grammar errors with level-appropriate explanations
+2. Vocabulary improvements suitable for their level
 3. Pronunciation guidance for difficult words
 4. Fluency and naturalness suggestions
 5. Cultural/contextual appropriateness
@@ -53,26 +79,26 @@ Return this exact JSON format:
       "type": "grammar/vocabulary/pronunciation/fluency/cultural",
       "original": "problematic part",
       "corrected": "improved version", 
-      "explanation": "detailed educational explanation",
-      "speakingTip": "specific advice for spoken English"
+      "explanation": "detailed educational explanation appropriate for ${userLevel} level",
+      "speakingTip": "specific advice for spoken English at ${userLevel} level"
     }
   ],
   "overallAdvice": {
     "strengths": ["positive aspects of the text"],
-    "improvements": ["specific areas to focus on"],
-    "speakingTips": ["practical tips for better oral communication"],
-    "practiceExercises": ["suggested exercises to improve"]
+    "improvements": ["specific areas to focus on for ${userLevel} level"],
+    "speakingTips": ["practical tips for better oral communication at ${userLevel} level"],
+    "practiceExercises": ["suggested exercises to improve at ${userLevel} level"]
   },
   "naturalAlternatives": [
     {
       "original": "formal/awkward phrase",
-      "alternative": "more natural spoken version",
+      "alternative": "more natural spoken version appropriate for ${userLevel} level",
       "context": "when to use this alternative"
     }
   ]
 }
 
-Be encouraging but thorough. Focus on helping the learner speak more naturally and confidently. Context: ${context}`
+Be encouraging but thorough. Focus on helping the ${userLevel} level learner speak more naturally and confidently. Context: ${context}`
           },
           {
             role: 'user',

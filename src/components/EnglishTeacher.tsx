@@ -27,6 +27,7 @@ interface Message {
 
 interface UserInfo {
   name: string;
+  level: 'beginner' | 'intermediate' | 'advanced';
 }
 
 interface Topic {
@@ -199,7 +200,7 @@ export const EnglishTeacher = () => {
           // Check for errors using OpenAI
           if (openAIService) {
             try {
-              const correction = await openAIService.correctText(transcript, selectedTopic?.title || "");
+              const correction = await openAIService.correctText(transcript, selectedTopic?.title || "", userInfo?.level || "intermediate");
               
               // Update message with correction
               setMessages(prev => prev.map(msg => 
@@ -217,7 +218,8 @@ export const EnglishTeacher = () => {
                 transcript,
                 messages,
                 selectedTopic?.title || "",
-                userInfo?.name || "Student"
+                userInfo?.name || "Student",
+                userInfo?.level || "intermediate"
               );
               addMessage(teacherResponse, true);
             } catch (error) {
@@ -256,7 +258,7 @@ export const EnglishTeacher = () => {
       // Check for errors using OpenAI
       if (openAIService) {
         try {
-          const correction = await openAIService.correctText(userMessage, selectedTopic?.title || "");
+          const correction = await openAIService.correctText(userMessage, selectedTopic?.title || "", userInfo?.level || "intermediate");
           
           // Update message with correction
           setMessages(prev => prev.map(msg => 
@@ -274,7 +276,8 @@ export const EnglishTeacher = () => {
             userMessage,
             messages,
             selectedTopic?.title || "",
-            userInfo?.name || "Student"
+            userInfo?.name || "Student",
+            userInfo?.level || "intermediate"
           );
           addMessage(teacherResponse, true);
         } catch (error) {
@@ -311,6 +314,7 @@ export const EnglishTeacher = () => {
     return (
       <TopicSelector 
         userName={userInfo?.name || "Student"}
+        userLevel={userInfo?.level || 'intermediate'}
         onTopicSelect={handleTopicSelect}
       />
     );

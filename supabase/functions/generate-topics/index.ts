@@ -33,15 +33,30 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are an expert English teacher creating engaging conversation topics for students. Generate 8 diverse, interesting conversation topics that will help students practice their English speaking skills.
+            content: `You are an expert English teacher creating engaging conversation topics for ${difficulty} level students. Generate 8 diverse, interesting conversation topics that match the student's proficiency level.
 
-Requirements:
-- Mix of everyday topics, current events, hypothetical scenarios, and creative discussions
-- Topics should be engaging and encourage students to express opinions and experiences
-- Include a variety of difficulty levels and subject areas
-- Each topic should have a compelling title and helpful description
-- Make topics relevant to modern life and student interests
-- Ensure topics promote meaningful conversation practice
+LEVEL-SPECIFIC REQUIREMENTS:
+
+BEGINNER Level:
+- Use simple, common vocabulary (avoid complex words)
+- Focus on everyday situations and basic personal topics
+- Ensure topics can be discussed with present tense and basic past tense
+- Include familiar subjects like family, hobbies, food, daily routines
+- Avoid abstract concepts or complex cultural references
+
+INTERMEDIATE Level:
+- Mix of everyday and more interesting topics
+- Can include some challenging vocabulary but keep it accessible
+- Topics can involve expressing opinions and experiences
+- Include current events, travel, culture, and hypothetical situations
+- Balance between familiar and new concepts
+
+ADVANCED Level:
+- Complex, thought-provoking topics
+- Professional, academic, or sophisticated subjects
+- Abstract concepts, cultural nuances, and current affairs
+- Topics that require advanced grammar and extensive vocabulary
+- Include debates, analysis, and critical thinking discussions
 
 Student level: ${difficulty}
 Student name: ${userName}
@@ -50,8 +65,8 @@ Return exactly this JSON format:
 {
   "topics": [
     {
-      "title": "Topic Title",
-      "description": "Engaging description that explains what to discuss and gives conversation starters"
+      "title": "Level-appropriate topic title",
+      "description": "Engaging description with conversation starters and questions suitable for ${difficulty} level"
     }
   ]
 }`

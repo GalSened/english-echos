@@ -68,10 +68,10 @@ class SupabaseOpenAIService {
     }
   }
 
-  async correctText(text: string, context: string = ""): Promise<ErrorCorrection> {
+  async correctText(text: string, context: string = "", userLevel: string = "intermediate"): Promise<ErrorCorrection> {
     try {
       const { data, error } = await supabase.functions.invoke('correct-text', {
-        body: { text, context }
+        body: { text, context, userLevel }
       });
 
       if (error) {
@@ -91,10 +91,10 @@ class SupabaseOpenAIService {
     }
   }
 
-  async generateTeacherResponse(userMessage: string, conversationHistory: any[], topic: string, userName: string): Promise<string> {
+  async generateTeacherResponse(userMessage: string, conversationHistory: any[], topic: string, userName: string, userLevel: string = "intermediate"): Promise<string> {
     try {
       const { data, error } = await supabase.functions.invoke('generate-teacher-response', {
-        body: { userMessage, conversationHistory, topic, userName }
+        body: { userMessage, conversationHistory, topic, userName, userLevel }
       });
 
       if (error) {

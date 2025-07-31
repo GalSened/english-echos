@@ -3,22 +3,49 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { TeacherAvatar } from "./TeacherAvatar";
-import { User, Brain } from "lucide-react";
+import { User, Brain, Target, BookOpen, Zap } from "lucide-react";
 
 interface UserSetupProps {
   onComplete: (userInfo: {
     name: string;
+    level: 'beginner' | 'intermediate' | 'advanced';
   }) => void;
 }
 
 export const UserSetup = ({ onComplete }: UserSetupProps) => {
   const [name, setName] = useState("");
+  const [level, setLevel] = useState<'beginner' | 'intermediate' | 'advanced'>('intermediate');
+
+  const levels = [
+    {
+      id: 'beginner' as const,
+      title: 'Beginner',
+      description: 'Learning basic vocabulary and simple sentences',
+      icon: BookOpen,
+      features: ['Simple vocabulary', 'Basic grammar', 'Slow-paced conversations']
+    },
+    {
+      id: 'intermediate' as const,
+      title: 'Intermediate', 
+      description: 'Comfortable with everyday conversations',
+      icon: Target,
+      features: ['Complex sentences', 'Varied vocabulary', 'Natural pace']
+    },
+    {
+      id: 'advanced' as const,
+      title: 'Advanced',
+      description: 'Fluent speaker looking to perfect skills',
+      icon: Zap,
+      features: ['Nuanced expressions', 'Cultural context', 'Professional topics']
+    }
+  ];
 
   const handleSubmit = () => {
     if (!name) return;
 
-    const userInfo = { name };
+    const userInfo = { name, level };
 
     // Store user info in localStorage for this session
     localStorage.setItem('englishTeacher_userInfo', JSON.stringify(userInfo));
@@ -61,13 +88,62 @@ export const UserSetup = ({ onComplete }: UserSetupProps) => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
+            <Target className="h-5 w-5" />
+            Choose Your Level
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {levels.map((levelOption) => {
+            const Icon = levelOption.icon;
+            return (
+              <div
+                key={levelOption.id}
+                className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                  level === levelOption.id
+                    ? 'border-primary bg-primary/5'
+                    : 'border-muted hover:border-primary/50'
+                }`}
+                onClick={() => setLevel(levelOption.id)}
+              >
+                <div className="flex items-start gap-3">
+                  <Icon className={`h-5 w-5 mt-0.5 ${
+                    level === levelOption.id ? 'text-primary' : 'text-muted-foreground'
+                  }`} />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-medium">{levelOption.title}</h3>
+                      {level === levelOption.id && (
+                        <Badge variant="default" className="text-xs">Selected</Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      {levelOption.description}
+                    </p>
+                    <div className="flex flex-wrap gap-1">
+                      {levelOption.features.map((feature, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {feature}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
             <Brain className="h-5 w-5" />
             AI Features Ready
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            ✅ AI conversation analysis and humanized voice are configured and ready to use through secure cloud services.
+            ✅ AI will adapt conversations, topics, and feedback to your {level} level with personalized learning experience.
           </p>
         </CardContent>
       </Card>

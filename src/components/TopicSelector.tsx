@@ -13,10 +13,11 @@ interface GeneratedTopic {
 
 interface TopicSelectorProps {
   userName: string;
+  userLevel: 'beginner' | 'intermediate' | 'advanced';
   onTopicSelect: (topic: { title: string; description: string; isCustom?: boolean }) => void;
 }
 
-export const TopicSelector = ({ userName, onTopicSelect }: TopicSelectorProps) => {
+export const TopicSelector = ({ userName, userLevel, onTopicSelect }: TopicSelectorProps) => {
   const [generatedTopics, setGeneratedTopics] = useState<GeneratedTopic[]>([]);
   const [isLoadingTopics, setIsLoadingTopics] = useState(true);
   const [customTopic, setCustomTopic] = useState("");
@@ -26,7 +27,7 @@ export const TopicSelector = ({ userName, onTopicSelect }: TopicSelectorProps) =
   const loadTopics = async () => {
     setIsLoadingTopics(true);
     try {
-      const topics = await aiService.generateTopics(userName);
+      const topics = await aiService.generateTopics(userName, userLevel);
       setGeneratedTopics(topics);
     } catch (error) {
       console.error('Error loading topics:', error);
@@ -79,7 +80,7 @@ export const TopicSelector = ({ userName, onTopicSelect }: TopicSelectorProps) =
           Hello {userName}! 👋
         </h1>
         <p className="text-muted-foreground text-lg mb-4">
-          Here are some fresh conversation topics generated just for you!
+          Here are {userLevel} level topics generated just for you!
         </p>
         <Button 
           onClick={handleRefreshTopics}
