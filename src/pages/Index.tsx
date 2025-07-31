@@ -1,9 +1,21 @@
 import { EnglishTeacher } from "@/components/EnglishTeacher";
+import { ThemeSelector } from "@/components/ThemeSelector";
+import { ThemeSelectorCompact } from "@/components/ThemeSelectorCompact";
 
 const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-secondary/20">
-      <div className="container mx-auto py-8">
+      <div className="container mx-auto py-8 relative">
+        {/* Theme selector positioned responsively */}
+        <div className="fixed top-4 right-4 z-50 hidden md:block">
+          <ThemeSelector />
+        </div>
+        
+        {/* Mobile theme selector - compact version */}
+        <div className="md:hidden mb-6 flex justify-end">
+          <ThemeSelectorCompact />
+        </div>
+        
         <EnglishTeacher />
       </div>
     </div>
