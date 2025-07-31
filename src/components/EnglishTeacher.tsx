@@ -392,12 +392,19 @@ export const EnglishTeacher = () => {
     handleTopicSelect(selectedTopic!);
   };
 
-  const handleNewTopic = () => {
-    setMessages([]);
+  const handleNewTopic = useCallback(() => {
     setSelectedTopic(null);
-    setConversationAnalysis(null);
+    setMessages([]);
     setAppState('topic-selection');
-  };
+    setConversationAnalysis(null);
+    
+    // Stop any ongoing speech
+    if (webSpeechService) {
+      webSpeechService.stopListening();
+    }
+    setIsListening(false);
+    setIsSpeaking(false);
+  }, [webSpeechService]);
 
   const handleExitToSetup = useCallback(() => {
     // Reset all state to start fresh
