@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { useConversation } from "@11labs/react";
+import { WebSpeechService } from "@/services/webSpeechService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -25,9 +25,7 @@ interface Message {
 
 interface UserInfo {
   name: string;
-  elevenLabsKey: string;
   openAiKey: string;
-  agentId: string;
 }
 
 interface Topic {
@@ -46,12 +44,17 @@ export const EnglishTeacher = () => {
   const [currentInput, setCurrentInput] = useState("");
   const [volume, setVolume] = useState(0.7);
   const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const [conversationAnalysis, setConversationAnalysis] = useState<AnalysisType | null>(null);
   const [openAIService, setOpenAIService] = useState<OpenAIService | null>(null);
+  const [webSpeechService, setWebSpeechService] = useState<WebSpeechService | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-  // Load saved user info on component mount
+  // Initialize services on component mount
   useEffect(() => {
+    const speechService = new WebSpeechService();
+    setWebSpeechService(speechService);
+    
     const saved = localStorage.getItem('englishTeacher_userInfo');
     if (saved) {
       try {
@@ -65,45 +68,6 @@ export const EnglishTeacher = () => {
     }
   }, []);
 
-  const conversation = useConversation({
-    onConnect: () => {
-      if (selectedTopic) {
-        addMessage(`Hello ${userInfo?.name}! I'm excited to practice "${selectedTopic.title}" with you today. ${selectedTopic.description}`, true);
-      }
-    },
-    onDisconnect: () => {
-      setIsListening(false);
-    },
-    onMessage: async (message) => {
-      if (message.source === "user") {
-        const userMessage = message.message;
-        
-        // Add user message
-        const userMsgId = addMessage(userMessage, false);
-        
-        // Check for errors using OpenAI
-        if (openAIService) {
-          try {
-            const correction = await openAIService.correctText(userMessage, selectedTopic?.title || "");
-            
-            // Update message with correction
-            setMessages(prev => prev.map(msg => 
-              msg.id === userMsgId ? { ...msg, correction } : msg
-            ));
-          } catch (error) {
-            console.error('Error checking message:', error);
-          }
-        }
-      } else if (message.source === "ai") {
-        addMessage(message.message, true);
-      }
-    },
-    onError: (error) => {
-      console.error("Conversation error:", error);
-      addMessage("Sorry, I encountered an error. Please try again.", true);
-    }
-  });
-
   const addMessage = useCallback((text: string, isTeacher: boolean): string => {
     const id = Date.now().toString();
     const newMessage: Message = {
@@ -113,8 +77,17 @@ export const EnglishTeacher = () => {
       timestamp: new Date()
     };
     setMessages(prev => [...prev, newMessage]);
+    
+    // If it's a teacher message, speak it
+    if (isTeacher && webSpeechService) {
+      setIsSpeaking(true);
+      webSpeechService.speak(text).finally(() => {
+        setIsSpeaking(false);
+      });
+    }
+    
     return id;
-  }, []);
+  }, [webSpeechService]);
 
   const scrollToBottom = () => {
     if (scrollAreaRef.current) {
@@ -140,23 +113,18 @@ export const EnglishTeacher = () => {
     setMessages([]); // Clear previous messages
     setAppState('conversation');
     
-    if (userInfo) {
-      try {
-        await conversation.startSession({ 
-          agentId: userInfo.agentId,
-          authorization: `Bearer ${userInfo.elevenLabsKey}`
-        });
-      } catch (error) {
-        console.error("Failed to start conversation:", error);
-        addMessage("Failed to connect to voice service. You can still type to practice!", true);
-      }
-    }
+    // Add welcome message
+    addMessage(`Hello ${userInfo?.name}! I'm excited to practice "${topic.title}" with you today. ${topic.description}`, true);
   };
 
   const handleEndConversation = async () => {
-    if (conversation.status === "connected") {
-      await conversation.endSession();
+    // Stop any ongoing speech
+    if (webSpeechService) {
+      webSpeechService.stopSpeaking();
+      webSpeechService.stopListening();
     }
+    setIsSpeaking(false);
+    setIsListening(false);
     
     if (openAIService && userInfo && selectedTopic) {
       const userMessages = messages
@@ -195,18 +163,63 @@ export const EnglishTeacher = () => {
     }
   };
 
-  const handleVolumeChange = async (newVolume: number) => {
+  const handleVolumeChange = (newVolume: number) => {
     setVolume(newVolume);
-    if (conversation.status === "connected") {
-      await conversation.setVolume({ volume: newVolume });
+    if (webSpeechService) {
+      webSpeechService.setVolume(newVolume);
     }
   };
 
-  const handleStartListening = () => {
-    setIsListening(true);
+  const handleStartListening = async () => {
+    if (webSpeechService) {
+      try {
+        setIsListening(true);
+        const transcript = await webSpeechService.startListening();
+        setIsListening(false);
+        
+        if (transcript.trim()) {
+          // Add user message
+          const userMsgId = addMessage(transcript, false);
+          
+          // Check for errors using OpenAI
+          if (openAIService) {
+            try {
+              const correction = await openAIService.correctText(transcript, selectedTopic?.title || "");
+              
+              // Update message with correction
+              setMessages(prev => prev.map(msg => 
+                msg.id === userMsgId ? { ...msg, correction } : msg
+              ));
+            } catch (error) {
+              console.error('Error checking message:', error);
+            }
+          }
+          
+          // Generate teacher response
+          setTimeout(() => {
+            const responses = [
+              "That's interesting! Can you tell me more about that?",
+              "Good! How do you feel about what you just said?",
+              "I see. What else can you share about this topic?",
+              "Great! Can you explain that in a different way?",
+              "Nice! What's your opinion on this matter?"
+            ];
+            const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+            addMessage(randomResponse, true);
+          }, 1000);
+        }
+      } catch (error) {
+        console.error('Speech recognition error:', error);
+        setIsListening(false);
+        addMessage("Sorry, I couldn't hear you clearly. Please try again or type your message.", true);
+      }
+    }
   };
 
   const handleStopListening = () => {
+    if (webSpeechService) {
+      webSpeechService.stopListening();
+    }
     setIsListening(false);
   };
 
@@ -232,9 +245,17 @@ export const EnglishTeacher = () => {
         }
       }
       
-      // Simulate teacher response (in real app this would come from conversation)
+      // Generate teacher response
       setTimeout(() => {
-        addMessage("That's interesting! Can you tell me more about that?", true);
+        const responses = [
+          "That's a great point! What made you think of that?",
+          "Interesting perspective! Can you elaborate?",
+          "I understand. How does this relate to your experience?",
+          "Good thinking! What else comes to mind?",
+          "Thank you for sharing that. What's next?"
+        ];
+        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+        addMessage(randomResponse, true);
       }, 1000);
     }
   };
@@ -283,7 +304,7 @@ export const EnglishTeacher = () => {
     <div className="max-w-6xl mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="text-center">
-        <TeacherAvatar isSpeaking={conversation.isSpeaking} className="mx-auto mb-4" />
+        <TeacherAvatar isSpeaking={isSpeaking} className="mx-auto mb-4" />
         <h1 className="text-3xl font-bold mb-2">
           {selectedTopic?.title} Practice
         </h1>
@@ -301,7 +322,7 @@ export const EnglishTeacher = () => {
             onStartListening={handleStartListening}
             onStopListening={handleStopListening}
             isListening={isListening}
-            isConnected={conversation.status === "connected"}
+            isConnected={webSpeechService?.isSupported() || false}
           />
           
           <Card>
@@ -344,7 +365,7 @@ export const EnglishTeacher = () => {
                       <ConversationMessage
                         message={message.text}
                         isTeacher={message.isTeacher}
-                        isSpeaking={message.isTeacher && conversation.isSpeaking}
+                        isSpeaking={message.isTeacher && isSpeaking}
                         timestamp={message.timestamp}
                       />
                       {message.correction && !message.isTeacher && (

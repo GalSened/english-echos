@@ -9,33 +9,27 @@ import { User, Key, Brain } from "lucide-react";
 interface UserSetupProps {
   onComplete: (userInfo: {
     name: string;
-    elevenLabsKey: string;
     openAiKey: string;
-    agentId: string;
   }) => void;
 }
 
 export const UserSetup = ({ onComplete }: UserSetupProps) => {
   const [name, setName] = useState("");
-  const [elevenLabsKey, setElevenLabsKey] = useState("");
   const [openAiKey, setOpenAiKey] = useState("");
-  const [agentId, setAgentId] = useState("");
 
   const handleSubmit = () => {
-    if (name && elevenLabsKey && openAiKey && agentId) {
+    if (name && openAiKey) {
       // Store in localStorage for frontend-only approach
       localStorage.setItem('englishTeacher_userInfo', JSON.stringify({
         name,
-        elevenLabsKey,
-        openAiKey,
-        agentId
+        openAiKey
       }));
       
-      onComplete({ name, elevenLabsKey, openAiKey, agentId });
+      onComplete({ name, openAiKey });
     }
   };
 
-  const isComplete = name && elevenLabsKey && openAiKey && agentId;
+  const isComplete = name && openAiKey;
 
   return (
     <div className="max-w-lg mx-auto p-6 space-y-6">
@@ -70,37 +64,6 @@ export const UserSetup = ({ onComplete }: UserSetupProps) => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Key className="h-5 w-5" />
-            ElevenLabs Configuration
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="elevenLabsKey">ElevenLabs API Key</Label>
-            <Input
-              id="elevenLabsKey"
-              type="password"
-              placeholder="Your ElevenLabs API key"
-              value={elevenLabsKey}
-              onChange={(e) => setElevenLabsKey(e.target.value)}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="agentId">Agent ID</Label>
-            <Input
-              id="agentId"
-              placeholder="Your ElevenLabs agent ID"
-              value={agentId}
-              onChange={(e) => setAgentId(e.target.value)}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
             <Brain className="h-5 w-5" />
             AI Analysis Engine
           </CardTitle>
@@ -117,7 +80,8 @@ export const UserSetup = ({ onComplete }: UserSetupProps) => {
             />
           </div>
           <p className="text-sm text-muted-foreground">
-            Used for analyzing your English, correcting errors, and providing detailed feedback
+            Used for analyzing your English, correcting errors, and providing detailed feedback. 
+            Voice will be provided by your browser's built-in speech synthesis.
           </p>
         </CardContent>
       </Card>
@@ -132,7 +96,7 @@ export const UserSetup = ({ onComplete }: UserSetupProps) => {
       </Button>
 
       <div className="text-xs text-muted-foreground text-center">
-        Your API keys are stored locally in your browser for security
+        Your API key is stored locally in your browser for security. Voice provided by browser speech synthesis.
       </div>
     </div>
   );
