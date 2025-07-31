@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { WebSpeechService } from "@/services/webSpeechService";
+import { ElevenLabsService } from "@/services/elevenlabsService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,7 @@ interface Message {
 interface UserInfo {
   name: string;
   openAiKey: string;
+  elevenLabsKey?: string;
 }
 
 interface Topic {
@@ -48,6 +50,7 @@ export const EnglishTeacher = () => {
   const [conversationAnalysis, setConversationAnalysis] = useState<AnalysisType | null>(null);
   const [openAIService, setOpenAIService] = useState<OpenAIService | null>(null);
   const [webSpeechService, setWebSpeechService] = useState<WebSpeechService | null>(null);
+  const [elevenLabsService, setElevenLabsService] = useState<ElevenLabsService | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   // Initialize services on component mount
@@ -61,6 +64,9 @@ export const EnglishTeacher = () => {
         const savedUserInfo = JSON.parse(saved);
         setUserInfo(savedUserInfo);
         setOpenAIService(new OpenAIService(savedUserInfo.openAiKey));
+        if (savedUserInfo.elevenLabsKey) {
+          setElevenLabsService(new ElevenLabsService(savedUserInfo.elevenLabsKey));
+        }
         setAppState('topic-selection');
       } catch (error) {
         console.error('Error loading saved user info:', error);
@@ -79,11 +85,14 @@ export const EnglishTeacher = () => {
     setMessages(prev => [...prev, newMessage]);
     
     // If it's a teacher message, speak it
-    if (isTeacher && webSpeechService) {
+    if (isTeacher) {
       setIsSpeaking(true);
-      webSpeechService.speak(text).finally(() => {
-        setIsSpeaking(false);
-      });
+      const speechService = elevenLabsService || webSpeechService;
+      if (speechService) {
+        speechService.speak(text).finally(() => {
+          setIsSpeaking(false);
+        });
+      }
     }
     
     return id;
@@ -105,6 +114,9 @@ export const EnglishTeacher = () => {
   const handleUserSetupComplete = (newUserInfo: UserInfo) => {
     setUserInfo(newUserInfo);
     setOpenAIService(new OpenAIService(newUserInfo.openAiKey));
+    if (newUserInfo.elevenLabsKey) {
+      setElevenLabsService(new ElevenLabsService(newUserInfo.elevenLabsKey));
+    }
     setAppState('topic-selection');
   };
 
@@ -119,6 +131,9 @@ export const EnglishTeacher = () => {
 
   const handleEndConversation = async () => {
     // Stop any ongoing speech
+    if (elevenLabsService) {
+      elevenLabsService.stopSpeaking();
+    }
     if (webSpeechService) {
       webSpeechService.stopSpeaking();
       webSpeechService.stopListening();
@@ -165,6 +180,9 @@ export const EnglishTeacher = () => {
 
   const handleVolumeChange = (newVolume: number) => {
     setVolume(newVolume);
+    if (elevenLabsService) {
+      elevenLabsService.setVolume(newVolume);
+    }
     if (webSpeechService) {
       webSpeechService.setVolume(newVolume);
     }
