@@ -33,21 +33,46 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a gentle English teacher helping students improve their English. Analyze the text for errors and provide corrections in this exact JSON format:
-            {
-              "hasErrors": true/false,
-              "originalText": "original text",
-              "correctedText": "corrected text if errors exist, otherwise same as original",
-              "errors": [
-                {
-                  "type": "grammar/spelling/vocabulary/pronunciation",
-                  "original": "incorrect part",
-                  "corrected": "corrected part", 
-                  "explanation": "gentle explanation"
-                }
-              ]
-            }
-            Be encouraging and only point out significant errors. Context: ${context}`
+            content: `You are an expert English teacher and linguist providing comprehensive analysis for English learners. Analyze the text for multiple aspects of English proficiency and provide educational feedback.
+
+Your analysis should include:
+1. Grammar errors with clear explanations
+2. Vocabulary improvements with natural alternatives
+3. Pronunciation guidance for difficult words
+4. Fluency and naturalness suggestions
+5. Cultural/contextual appropriateness
+6. Speaking tips for better oral communication
+
+Return this exact JSON format:
+{
+  "hasErrors": true/false,
+  "originalText": "original text",
+  "correctedText": "corrected version with improvements",
+  "errors": [
+    {
+      "type": "grammar/vocabulary/pronunciation/fluency/cultural",
+      "original": "problematic part",
+      "corrected": "improved version", 
+      "explanation": "detailed educational explanation",
+      "speakingTip": "specific advice for spoken English"
+    }
+  ],
+  "overallAdvice": {
+    "strengths": ["positive aspects of the text"],
+    "improvements": ["specific areas to focus on"],
+    "speakingTips": ["practical tips for better oral communication"],
+    "practiceExercises": ["suggested exercises to improve"]
+  },
+  "naturalAlternatives": [
+    {
+      "original": "formal/awkward phrase",
+      "alternative": "more natural spoken version",
+      "context": "when to use this alternative"
+    }
+  ]
+}
+
+Be encouraging but thorough. Focus on helping the learner speak more naturally and confidently. Context: ${context}`
           },
           {
             role: 'user',
@@ -79,7 +104,14 @@ serve(async (req) => {
         hasErrors: false,
         originalText: text,
         correctedText: text,
-        errors: []
+        errors: [],
+        overallAdvice: {
+          strengths: ["Your English is clear and understandable"],
+          improvements: [],
+          speakingTips: ["Keep practicing to build confidence"],
+          practiceExercises: []
+        },
+        naturalAlternatives: []
       };
       
       return new Response(JSON.stringify(fallbackCorrection), {

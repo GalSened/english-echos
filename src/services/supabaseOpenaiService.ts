@@ -30,10 +30,22 @@ interface ErrorCorrection {
   originalText: string;
   correctedText: string;
   errors: {
-    type: 'grammar' | 'vocabulary' | 'pronunciation' | 'spelling';
+    type: 'grammar' | 'vocabulary' | 'pronunciation' | 'fluency' | 'cultural';
     original: string;
     corrected: string;
     explanation: string;
+    speakingTip: string;
+  }[];
+  overallAdvice?: {
+    strengths: string[];
+    improvements: string[];
+    speakingTips: string[];
+    practiceExercises: string[];
+  };
+  naturalAlternatives?: {
+    original: string;
+    alternative: string;
+    context: string;
   }[];
 }
 
