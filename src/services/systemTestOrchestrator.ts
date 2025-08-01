@@ -188,24 +188,8 @@ export class SystemTestOrchestrator {
         };
       }
 
-      // Test actual speech generation (only if not muted)
-      if (!this.voiceTestsMuted) {
-        try {
-          await this.elevenlabsService.speak("System test message", "9BWtsMINqrJLrRacOk9x");
-        } catch (speechError) {
-          return {
-            testName,
-            status: 'warning',
-            duration: Date.now() - startTime,
-            details: `ElevenLabs available but speech generation failed: ${speechError.message}`,
-            timestamp: new Date(),
-            errorCode: 'ELEVENLABS_SPEECH_FAILED',
-            healingActions: ['retry_speech', 'check_voice_id', 'verify_audio_context']
-          };
-        }
-      } else {
-        console.log('🔇 Skipping ElevenLabs speech test (voices muted)');
-      }
+      // Test speech generation is disabled to prevent system test voice output
+      console.log('🔇 ElevenLabs speech test disabled (system test voice removed)');
         
       return {
         testName,
