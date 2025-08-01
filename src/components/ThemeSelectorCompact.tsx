@@ -36,13 +36,16 @@ export const ThemeSelectorCompact = () => {
         <Button 
           variant="outline" 
           size="sm"
-          className="gap-2 bg-card/95 backdrop-blur-sm border-border/50 hover:bg-muted/50"
+          className="gap-2 bg-popover backdrop-blur-sm border-border hover:bg-muted/50 shadow-sm"
         >
           <CurrentIcon className="h-4 w-4" />
           <span className="hidden sm:inline">{currentTheme?.label || "Theme"}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-36">
+      <DropdownMenuContent 
+        align="end" 
+        className="w-36 z-50 bg-popover border border-border shadow-lg backdrop-blur-sm"
+      >
         {themes.map((themeOption) => {
           const Icon = themeOption.icon;
           const isSelected = theme === themeOption.value;

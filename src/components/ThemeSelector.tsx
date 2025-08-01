@@ -73,15 +73,15 @@ export const ThemeSelector = () => {
       onMouseEnter={() => setIsOpen(true)}
     >
       {/* Trigger Element */}
-      <div className="flex items-center gap-2 p-2 rounded-lg bg-card/90 backdrop-blur-sm border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors">
+      <div className="flex items-center gap-2 p-2 rounded-lg bg-popover backdrop-blur-sm border border-border cursor-pointer hover:bg-muted/50 transition-colors shadow-sm">
         <CurrentIcon className="h-4 w-4 text-muted-foreground" />
         <span className="text-sm text-muted-foreground hidden sm:inline">Theme</span>
       </div>
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute top-full right-0 mt-2 z-50">
-          <Card className="w-64 shadow-lg border-border/50 backdrop-blur-sm bg-card border">
+        <div className="absolute top-full right-0 mt-2 z-[60]">
+          <Card className="w-64 shadow-lg border-border/50 backdrop-blur-sm bg-popover border">
             <CardHeader className="pb-2 pt-3 px-3">
               <CardTitle className="flex items-center gap-2 text-sm">
                 <Palette className="h-3 w-3" />
