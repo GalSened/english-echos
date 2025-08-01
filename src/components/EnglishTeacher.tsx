@@ -53,7 +53,7 @@ export const EnglishTeacher = () => {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [voicesMuted, setVoicesMuted] = useState(false);
-  const [selectedVoice, setSelectedVoice] = useState("9BWtsMINqrJLrRacOk9x"); // Default to Aria
+  const [selectedVoice, setSelectedVoice] = useState("nBwlhHY26CjUa3imYVjB"); // Your custom voice
   const [speechQueue, setSpeechQueue] = useState<Array<{id: string, text: string}>>([]);
   const [isProcessingSpeech, setIsProcessingSpeech] = useState(false);
   const [conversationAnalysis, setConversationAnalysis] = useState<AnalysisType | null>(null);

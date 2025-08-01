@@ -20,6 +20,7 @@ interface VoiceControlsProps {
 }
 
 const VOICE_OPTIONS = [
+  { id: "nBwlhHY26CjUa3imYVjB", name: "Custom Voice" },
   { id: "9BWtsMINqrJLrRacOk9x", name: "Aria (Female)" },
   { id: "CwhRBWXzGAHq8TQ4Fs17", name: "Roger (Male)" },
   { id: "EXAVITQu4vr4xnSDxMaL", name: "Sarah (Female)" },
