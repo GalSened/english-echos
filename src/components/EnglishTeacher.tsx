@@ -339,28 +339,25 @@ export const EnglishTeacher = () => {
         // Add user message
         const userMsgId = addMessage(transcript, false);
         
-        // Check for errors and provide fun spoken corrections
+        // Process correction and teacher response sequentially to prevent parallel messages
         if (openAIService) {
           try {
+            // First, check for errors and provide correction if needed
             const correction = await openAIService.correctText(transcript, selectedTopic?.title || "", userInfo?.level || "intermediate");
             
-            // If there are errors, speak a fun correction instead of showing UI
             if (correction.hasErrors) {
               const funCorrection = await openAIService.generateFunCorrection(
                 correction,
                 userInfo?.name || "Student"
               );
-              // Don't add the correction to messages, just speak it
+              // Add the correction and wait for it to complete speaking
               addMessage(funCorrection, true);
+              
+              // Wait a moment for the correction to be processed
+              await new Promise(resolve => setTimeout(resolve, 500));
             }
-          } catch (error) {
-            console.error('Error checking message:', error);
-          }
-        }
-        
-        // Generate intelligent teacher response using OpenAI
-        if (openAIService) {
-          try {
+            
+            // Then generate teacher response
             const teacherResponse = await openAIService.generateTeacherResponse(
               transcript,
               messages,
@@ -370,7 +367,7 @@ export const EnglishTeacher = () => {
             );
             addMessage(teacherResponse, true);
           } catch (error) {
-            console.error('Error generating teacher response:', error);
+            console.error('Error processing message:', error);
             // Fallback to simple response
             addMessage("Tell me more!", true);
           }
@@ -410,28 +407,25 @@ export const EnglishTeacher = () => {
       // Add user message
       const userMsgId = addMessage(userMessage, false);
       
-      // Check for errors and provide fun spoken corrections
+      // Process correction and teacher response sequentially to prevent parallel messages
       if (openAIService) {
         try {
+          // First, check for errors and provide correction if needed
           const correction = await openAIService.correctText(userMessage, selectedTopic?.title || "", userInfo?.level || "intermediate");
           
-          // If there are errors, speak a fun correction instead of showing UI
           if (correction.hasErrors) {
             const funCorrection = await openAIService.generateFunCorrection(
               correction,
               userInfo?.name || "Student"
             );
-            // Don't add the correction to messages, just speak it
+            // Add the correction and wait for it to complete speaking
             addMessage(funCorrection, true);
+            
+            // Wait a moment for the correction to be processed
+            await new Promise(resolve => setTimeout(resolve, 500));
           }
-        } catch (error) {
-          console.error('Error checking message:', error);
-        }
-      }
-      
-      // Generate intelligent teacher response using OpenAI
-      if (openAIService) {
-        try {
+          
+          // Then generate teacher response
           const teacherResponse = await openAIService.generateTeacherResponse(
             userMessage,
             messages,
@@ -441,7 +435,7 @@ export const EnglishTeacher = () => {
           );
           addMessage(teacherResponse, true);
         } catch (error) {
-          console.error('Error generating teacher response:', error);
+          console.error('Error processing message:', error);
           // Fallback to simple response
           addMessage("That's interesting! Can you tell me more about that?", true);
         }
