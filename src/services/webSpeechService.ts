@@ -93,20 +93,61 @@ class WebSpeechService {
         return;
       }
 
+      // Set up timeout for recognition
+      const timeout = setTimeout(() => {
+        this.recognition.stop();
+        reject(new Error('Speech recognition timeout'));
+      }, 30000);
+
       this.recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        resolve(transcript);
+        clearTimeout(timeout);
+        try {
+          const transcript = event.results[0][0].transcript;
+          if (transcript && transcript.trim().length > 0) {
+            resolve(transcript.trim());
+          } else {
+            reject(new Error('Empty transcript received'));
+          }
+        } catch (error) {
+          reject(new Error('Error processing speech result'));
+        }
       };
 
       this.recognition.onerror = (event) => {
-        reject(new Error(`Recognition error: ${event.error}`));
+        clearTimeout(timeout);
+        console.error('Speech recognition error:', event.error);
+        
+        // Provide more specific error messages
+        switch (event.error) {
+          case 'not-allowed':
+          case 'permission-denied':
+            reject(new Error('Microphone permission denied'));
+            break;
+          case 'no-speech':
+            reject(new Error('No speech detected'));
+            break;
+          case 'audio-capture':
+            reject(new Error('Audio capture failed'));
+            break;
+          case 'network':
+            reject(new Error('Network error during speech recognition'));
+            break;
+          default:
+            reject(new Error(`Recognition error: ${event.error}`));
+        }
       };
 
       this.recognition.onend = () => {
-        // Recognition ended without result
+        clearTimeout(timeout);
+        // Recognition ended without result - this is handled by timeout
       };
 
-      this.recognition.start();
+      try {
+        this.recognition.start();
+      } catch (error) {
+        clearTimeout(timeout);
+        reject(new Error('Failed to start speech recognition'));
+      }
     });
   }
 

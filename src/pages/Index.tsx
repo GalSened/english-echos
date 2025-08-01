@@ -1,6 +1,7 @@
 import { EnglishTeacher } from "@/components/EnglishTeacher";
 import { ThemeSelector } from "@/components/ThemeSelector";
 import { ThemeSelectorCompact } from "@/components/ThemeSelectorCompact";
+import { PerformanceMonitor } from "@/components/PerformanceMonitor";
 
 const Index = () => {
   return (
@@ -18,6 +19,9 @@ const Index = () => {
         
         <EnglishTeacher />
       </div>
+      
+      {/* Performance monitor for debugging */}
+      <PerformanceMonitor />
     </div>
   );
 };

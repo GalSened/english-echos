@@ -18,6 +18,8 @@ import { AdvancedConversationAnalysis } from "./AdvancedConversationAnalysis";
 import { SystemMonitorDashboard } from "./SystemMonitorDashboard";
 import { StatusIndicator } from "./StatusIndicator";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
+import { analytics } from "@/utils/analytics";
 
 import { Send, MessageCircle, BarChart3, AlertCircle, LogOut, Home, Shield } from "lucide-react";
 
@@ -44,6 +46,7 @@ type AppState = 'setup' | 'topic-selection' | 'conversation' | 'analysis';
 
 export const EnglishTeacher = () => {
   const { toast } = useToast();
+  const { handleErrorWithToast } = useErrorHandler();
   const [appState, setAppState] = useState<AppState>('setup');
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
@@ -68,32 +71,42 @@ export const EnglishTeacher = () => {
   // Initialize services on component mount
   useEffect(() => {
     const initServices = async () => {
-      const speechService = new WebSpeechService();
-      setWebSpeechService(speechService);
-      
-      const aiService = new SupabaseOpenAIService();
-      setOpenAIService(aiService);
-      
-      const ttsService = new ElevenLabsService();
-      setElevenLabsService(ttsService);
-      
-      // Check microphone permission
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        setMicrophonePermission(true);
-        stream.getTracks().forEach(track => track.stop()); // Stop the stream immediately
+        const speechService = new WebSpeechService();
+        setWebSpeechService(speechService);
+        
+        const aiService = new SupabaseOpenAIService();
+        setOpenAIService(aiService);
+        
+        const ttsService = new ElevenLabsService();
+        setElevenLabsService(ttsService);
+        
+        // Check microphone permission gracefully
+        try {
+          const permissionStatus = await navigator.permissions?.query({ name: 'microphone' as PermissionName });
+          if (permissionStatus?.state === 'granted') {
+            setMicrophonePermission(true);
+          } else {
+            console.log('Microphone permission not granted yet');
+            setMicrophonePermission(false);
+          }
+        } catch (error) {
+          // Fallback for browsers that don't support permissions API
+          setMicrophonePermission(false);
+        }
+        
+        // Test ElevenLabs availability silently (background test)
+        try {
+          const isAvailable = await ttsService.testService();
+          setElevenLabsAvailable(isAvailable);
+        } catch (error) {
+          console.log('ElevenLabs not available, will use browser speech');
+          setElevenLabsAvailable(false);
+        }
       } catch (error) {
-        console.log('Microphone permission not granted yet');
-        setMicrophonePermission(false);
-      }
-      
-      // Test ElevenLabs availability silently (background test)
-      try {
-        const isAvailable = await ttsService.testService();
-        setElevenLabsAvailable(isAvailable);
-      } catch (error) {
-        console.log('ElevenLabs not available, will use browser speech');
-        setElevenLabsAvailable(false);
+        console.error('Error initializing services:', error);
+        analytics.trackError('Service initialization failed', 'EnglishTeacher.initServices');
+        handleErrorWithToast(error, 'Some features may not work properly. Please refresh the page.');
       }
     };
     
@@ -111,7 +124,7 @@ export const EnglishTeacher = () => {
         sessionStorage.removeItem('englishTeacher_userInfo');
       }
     }
-  }, []);
+  }, [toast]);
 
   // Speech queue processor
   useEffect(() => {
@@ -206,6 +219,9 @@ export const EnglishTeacher = () => {
     setSelectedTopic(topic);
     setMessages([]); // Clear previous messages
     setAppState('conversation');
+    
+    // Analytics tracking
+    analytics.trackConversationStart(topic.title, userInfo?.level || 'intermediate');
     
     // Add brief welcome message - student should be the main speaker
     addMessage(`Hi ${userInfo?.name}! Ready to talk about ${topic.title}?`, true);
@@ -339,15 +355,35 @@ export const EnglishTeacher = () => {
     }
 
     try {
-      // Request microphone permission
-      await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Request microphone permission with timeout
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Microphone permission timeout')), 10000)
+      );
+      
+      const permissionPromise = navigator.mediaDevices.getUserMedia({ 
+        audio: { 
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true 
+        } 
+      });
+      
+      const stream = await Promise.race([permissionPromise, timeoutPromise]) as MediaStream;
+      stream.getTracks().forEach(track => track.stop()); // Clean up immediately
       
       setIsListening(true);
       console.log('Starting speech recognition...');
       
-      const transcript = await webSpeechService.startListening();
-      setIsListening(false);
+      const timeoutListening = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Speech recognition timeout')), 30000)
+      );
       
+      const transcript = await Promise.race([
+        webSpeechService.startListening(),
+        timeoutListening
+      ]) as string;
+      
+      setIsListening(false);
       console.log('Speech recognition result:', transcript);
       
       if (transcript.trim()) {
@@ -399,8 +435,12 @@ export const EnglishTeacher = () => {
       
       if (error.name === 'NotAllowedError') {
         addMessage("Please allow microphone access to use voice features. You can enable it in your browser settings.", true);
+        setMicrophonePermission(false);
       } else if (error.message.includes('not-allowed')) {
         addMessage("Microphone access was denied. Please check your browser settings and try again.", true);
+        setMicrophonePermission(false);
+      } else if (error.message.includes('timeout')) {
+        addMessage("Request timed out. Please try again.", true);
       } else {
         addMessage("Sorry, I couldn't hear you clearly. Please try again or check your microphone settings.", true);
       }
