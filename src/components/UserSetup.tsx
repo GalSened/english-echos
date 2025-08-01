@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { TeacherAvatar } from "./TeacherAvatar";
-import { User, Brain, Target, BookOpen, Zap, Home } from "lucide-react";
+import { User, Brain, Target, BookOpen, Zap, Home, Loader2 } from "lucide-react";
 
 interface UserSetupProps {
   onComplete: (userInfo: {
@@ -17,6 +17,7 @@ interface UserSetupProps {
 export const UserSetup = ({ onComplete }: UserSetupProps) => {
   const [name, setName] = useState("");
   const [level, setLevel] = useState<'beginner' | 'intermediate' | 'advanced'>('intermediate');
+  const [isStarting, setIsStarting] = useState(false);
 
   const levels = [
     {
@@ -42,9 +43,13 @@ export const UserSetup = ({ onComplete }: UserSetupProps) => {
     }
   ];
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!name) return;
 
+    setIsStarting(true);
+    // Add small delay to show loading state
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
     const userInfo = { name, level };
     
     // Session storage is handled in the parent component
@@ -161,11 +166,18 @@ export const UserSetup = ({ onComplete }: UserSetupProps) => {
 
       <Button 
         onClick={handleSubmit}
-        disabled={!isComplete}
+        disabled={!isComplete || isStarting}
         className="w-full bg-teacher hover:bg-teacher/90"
         size="lg"
       >
-        Start Learning English
+        {isStarting ? (
+          <>
+            <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+            Starting...
+          </>
+        ) : (
+          "Start Learning English 🚀"
+        )}
       </Button>
 
       <div className="text-xs text-muted-foreground text-center">

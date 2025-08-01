@@ -21,7 +21,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useErrorHandler } from "@/hooks/useErrorHandler";
 import { analytics } from "@/utils/analytics";
 
-import { Send, MessageCircle, BarChart3, AlertCircle, LogOut, Home, Shield } from "lucide-react";
+import { Send, MessageCircle, BarChart3, AlertCircle, LogOut, Home, Shield, Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Message {
   id: string;
@@ -66,6 +67,8 @@ export const EnglishTeacher = () => {
   const [microphonePermission, setMicrophonePermission] = useState(false);
   const [elevenLabsAvailable, setElevenLabsAvailable] = useState(false);
   const [showSystemMonitor, setShowSystemMonitor] = useState(false);
+  const [isGeneratingResponse, setIsGeneratingResponse] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   // Initialize services on component mount
@@ -274,6 +277,7 @@ export const EnglishTeacher = () => {
         .filter(msg => !msg.isTeacher)
         .map(msg => msg.text);
       
+      setIsAnalyzing(true);
       try {
         const analysis = await openAIService.analyzeConversation(
           userMessages,
@@ -334,6 +338,8 @@ export const EnglishTeacher = () => {
           }
         });
         setAppState('analysis');
+      } finally {
+        setIsAnalyzing(false);
       }
     }
   };
@@ -392,6 +398,7 @@ export const EnglishTeacher = () => {
         
         // Process correction and teacher response sequentially to prevent parallel messages
         if (openAIService) {
+          setIsGeneratingResponse(true);
           try {
             // First, check for errors and provide correction if needed
             const correction = await openAIService.correctText(transcript, selectedTopic?.title || "", userInfo?.level || "intermediate");
@@ -421,6 +428,8 @@ export const EnglishTeacher = () => {
             console.error('Error processing message:', error);
             // Fallback to simple response
             addMessage("Tell me more!", true);
+          } finally {
+            setIsGeneratingResponse(false);
           }
         } else {
           // Fallback if service not available
@@ -464,6 +473,7 @@ export const EnglishTeacher = () => {
       
       // Process correction and teacher response sequentially to prevent parallel messages
       if (openAIService) {
+        setIsGeneratingResponse(true);
         try {
           // First, check for errors and provide correction if needed
           const correction = await openAIService.correctText(userMessage, selectedTopic?.title || "", userInfo?.level || "intermediate");
@@ -493,6 +503,8 @@ export const EnglishTeacher = () => {
           console.error('Error processing message:', error);
           // Fallback to simple response
           addMessage("That's interesting! Can you tell me more about that?", true);
+        } finally {
+          setIsGeneratingResponse(false);
         }
       } else {
         // Fallback if service not available
@@ -684,9 +696,14 @@ export const EnglishTeacher = () => {
                 variant="outline"
                 className="w-full text-sm"
                 size="sm"
+                disabled={isAnalyzing}
               >
-                <BarChart3 className="h-4 w-4 mr-2" />
-                End & Analyze
+                {isAnalyzing ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                )}
+                {isAnalyzing ? "Analyzing..." : "End & Analyze"}
               </Button>
               
               <div className="grid grid-cols-2 lg:grid-cols-1 gap-2">
@@ -759,6 +776,21 @@ export const EnglishTeacher = () => {
                       )}
                     </div>
                   ))}
+                  
+                  {/* Show loading state when generating response */}
+                  {isGeneratingResponse && (
+                    <div className="space-y-2">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-full bg-teacher flex items-center justify-center text-teacher-foreground text-sm font-medium">
+                          T
+                        </div>
+                        <div className="flex-1 space-y-2">
+                          <Skeleton className="h-4 w-3/4" />
+                          <Skeleton className="h-4 w-1/2" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </ScrollArea>
 
@@ -767,7 +799,7 @@ export const EnglishTeacher = () => {
               <div className="p-3 sm:p-4 text-center">
                 <Button 
                   onClick={isListening ? handleStopListening : handleStartListening}
-                  disabled={!webSpeechService?.isSupported()}
+                  disabled={!webSpeechService?.isSupported() || isGeneratingResponse}
                   size="lg"
                   className={`w-full sm:w-auto px-6 sm:px-8 py-4 sm:py-6 text-base sm:text-lg font-medium transition-all ${
                     isListening 
@@ -775,10 +807,24 @@ export const EnglishTeacher = () => {
                       : "bg-primary hover:bg-primary/90"
                   }`}
                 >
-                  {isListening ? "🎤 Listening..." : "🎤 Speak to respond"}
+                  {isGeneratingResponse ? (
+                    <>
+                      <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                      Processing...
+                    </>
+                  ) : isListening ? (
+                    "🎤 Listening..."
+                  ) : (
+                    "🎤 Speak to respond"
+                  )}
                 </Button>
                 <p className="text-xs sm:text-sm text-muted-foreground mt-2">
-                  {isListening ? "Speak now" : "Click the button and speak your response"}
+                  {isGeneratingResponse 
+                    ? "AI is thinking..." 
+                    : isListening 
+                      ? "Speak now" 
+                      : "Click the button and speak your response"
+                  }
                 </p>
               </div>
             </CardContent>

@@ -322,11 +322,11 @@ export const SystemMonitorDashboard: React.FC<SystemMonitorDashboardProps> = ({
                             </span>
                           </div>
                         )}
-                      </div>
-                    ))
-                  )}
-                </div>
-              </ScrollArea>
+                    </div>
+                  ))
+                )}
+              </div>
+            </ScrollArea>
             </CardContent>
           </Card>
 
