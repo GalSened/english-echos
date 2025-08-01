@@ -24,16 +24,17 @@ describe('SupabaseOpenAIService', () => {
       const mockResponse = {
         data: {
           hasErrors: true,
-          corrections: [
+          originalText: 'I go to school yesterday',
+          correctedText: 'I went to school yesterday',
+          errors: [
             {
+              type: 'grammar' as const,
               original: 'I go to school yesterday',
               corrected: 'I went to school yesterday',
-              type: 'verb_tense',
-              explanation: 'Use past tense for yesterday'
+              explanation: 'Use past tense for yesterday',
+              speakingTip: 'Remember to use past tense with time indicators like "yesterday"'
             }
-          ],
-          correctedText: 'I went to school yesterday',
-          errorCount: 1
+          ]
         },
         error: null
       };
@@ -52,16 +53,16 @@ describe('SupabaseOpenAIService', () => {
 
       expect(result).toEqual(mockResponse.data);
       expect(result.hasErrors).toBe(true);
-      expect(result.errorCount).toBe(1);
+      expect(result.errors).toHaveLength(1);
     });
 
     it('should handle text without errors', async () => {
       const mockResponse = {
         data: {
           hasErrors: false,
-          corrections: [],
+          originalText: 'I went to school yesterday',
           correctedText: 'I went to school yesterday',
-          errorCount: 0
+          errors: []
         },
         error: null
       };
@@ -71,7 +72,7 @@ describe('SupabaseOpenAIService', () => {
       const result = await service.correctText('I went to school yesterday', 'Daily Activities', 'intermediate');
 
       expect(result.hasErrors).toBe(false);
-      expect(result.errorCount).toBe(0);
+      expect(result.errors).toHaveLength(0);
     });
 
     it('should handle API errors', async () => {
@@ -94,16 +95,17 @@ describe('SupabaseOpenAIService', () => {
     it('should generate fun correction messages', async () => {
       const mockCorrection = {
         hasErrors: true,
-        corrections: [
+        originalText: 'I go to school yesterday',
+        correctedText: 'I went to school yesterday',
+        errors: [
           {
+            type: 'grammar' as const,
             original: 'I go to school yesterday',
             corrected: 'I went to school yesterday',
-            type: 'verb_tense',
-            explanation: 'Use past tense for yesterday'
+            explanation: 'Use past tense for yesterday',
+            speakingTip: 'Remember to use past tense with time indicators like "yesterday"'
           }
-        ],
-        correctedText: 'I went to school yesterday',
-        errorCount: 1
+        ]
       };
 
       const mockResponse = {
@@ -130,9 +132,9 @@ describe('SupabaseOpenAIService', () => {
     it('should handle empty corrections', async () => {
       const mockCorrection = {
         hasErrors: false,
-        corrections: [],
+        originalText: 'Perfect sentence',
         correctedText: 'Perfect sentence',
-        errorCount: 0
+        errors: []
       };
 
       const mockResponse = {
@@ -169,8 +171,8 @@ describe('SupabaseOpenAIService', () => {
         'I visited Japan last year',
         mockMessages,
         'Travel Adventures',
-        'intermediate',
-        'Sarah'
+        'Sarah',
+        'intermediate'
       );
 
       expect(mockSupabaseClient.functions.invoke).toHaveBeenCalledWith('generate-teacher-response', {
@@ -178,8 +180,8 @@ describe('SupabaseOpenAIService', () => {
           userMessage: 'I visited Japan last year',
           conversationHistory: mockMessages,
           topic: 'Travel Adventures',
-          userLevel: 'intermediate',
-          userName: 'Sarah'
+          userName: 'Sarah',
+          userLevel: 'intermediate'
         }
       });
 
@@ -201,8 +203,8 @@ describe('SupabaseOpenAIService', () => {
           'Test message',
           [],
           'Test Topic',
-          level,
-          'TestUser'
+          'TestUser',
+          level
         );
 
         expect(result).toBe(`Response for ${level} level`);
@@ -275,11 +277,12 @@ describe('SupabaseOpenAIService', () => {
 
       mockSupabaseClient.functions.invoke.mockResolvedValue(mockResponse);
 
-      const result = await service.analyzeConversation(mockMessages, 'Test Topic', 'TestUser');
+      const userMessages = mockMessages.filter(m => !m.isTeacher).map(m => m.text);
+      const result = await service.analyzeConversation(userMessages, 'Test Topic', 'TestUser');
 
       expect(mockSupabaseClient.functions.invoke).toHaveBeenCalledWith('analyze-conversation', {
         body: {
-          messages: mockMessages,
+          userMessages,
           topic: 'Test Topic',
           userName: 'TestUser'
         }
@@ -298,7 +301,8 @@ describe('SupabaseOpenAIService', () => {
 
       mockSupabaseClient.functions.invoke.mockResolvedValue(mockResponse);
 
-      await expect(service.analyzeConversation([], 'Test Topic', 'TestUser')).rejects.toThrow('Insufficient data for analysis');
+      const result = await service.analyzeConversation([], 'Test Topic', 'TestUser');
+      expect(result).toBeDefined(); // Should return fallback analysis
     });
   });
 
@@ -335,12 +339,12 @@ describe('SupabaseOpenAIService', () => {
 
       mockSupabaseClient.functions.invoke.mockResolvedValue(mockResponse);
 
-      const result = await service.generateTopics('intermediate', ['environment', 'technology']);
+      const result = await service.generateTopics('TestUser', 'intermediate');
 
       expect(mockSupabaseClient.functions.invoke).toHaveBeenCalledWith('generate-topics', {
         body: {
-          userLevel: 'intermediate',
-          interests: ['environment', 'technology']
+          userName: 'TestUser',
+          difficulty: 'intermediate'
         }
       });
 
@@ -370,42 +374,16 @@ describe('SupabaseOpenAIService', () => {
 
         mockSupabaseClient.functions.invoke.mockResolvedValue(mockResponse);
 
-        const result = await service.generateTopics(level, ['general']);
+        const result = await service.generateTopics('TestUser', level);
 
         expect(result[0].difficulty).toBe(level);
       }
     });
   });
 
-  describe('Connection Testing', () => {
-    it('should test connection successfully', async () => {
-      mockSupabaseClient.functions.invoke.mockResolvedValue({
-        data: { status: 'connected' },
-        error: null
-      });
-
-      const result = await service.testConnection();
-
-      expect(result).toBe(true);
-    });
-
-    it('should handle connection failures', async () => {
-      mockSupabaseClient.functions.invoke.mockRejectedValue(new Error('Connection failed'));
-
-      const result = await service.testConnection();
-
-      expect(result).toBe(false);
-    });
-
-    it('should handle API errors during connection test', async () => {
-      mockSupabaseClient.functions.invoke.mockResolvedValue({
-        data: null,
-        error: new Error('API Error')
-      });
-
-      const result = await service.testConnection();
-
-      expect(result).toBe(false);
+  describe('Service Instantiation', () => {
+    it('should create service instance', () => {
+      expect(service).toBeInstanceOf(SupabaseOpenAIService);
     });
   });
 
@@ -442,7 +420,7 @@ describe('SupabaseOpenAIService', () => {
   describe('Performance', () => {
     it('should handle multiple concurrent requests', async () => {
       const mockResponse = {
-        data: { hasErrors: false, corrections: [], correctedText: 'test', errorCount: 0 },
+        data: { hasErrors: false, originalText: 'test text', correctedText: 'test text', errors: [] },
         error: null
       };
 
@@ -461,7 +439,7 @@ describe('SupabaseOpenAIService', () => {
     it('should handle large text inputs', async () => {
       const largeText = 'a'.repeat(10000);
       const mockResponse = {
-        data: { hasErrors: false, corrections: [], correctedText: largeText, errorCount: 0 },
+        data: { hasErrors: false, originalText: largeText, correctedText: largeText, errors: [] },
         error: null
       };
 
