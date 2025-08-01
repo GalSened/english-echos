@@ -51,18 +51,9 @@ export function AppSidebar() {
             <SidebarMenu>
               {navigationItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    asChild 
-                    tooltip={item.title}
-                    className="w-full"
-                  >
-                    <a 
-                      href={item.url}
-                      className="flex items-center gap-2 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary hover:bg-muted"
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {!isCollapsed && <span>{item.title}</span>}
-                    </a>
+                  <SidebarMenuButton tooltip={item.title} className="w-full">
+                    <item.icon className="h-4 w-4" />
+                    {!isCollapsed && <span>{item.title}</span>}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

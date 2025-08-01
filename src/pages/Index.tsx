@@ -2,8 +2,6 @@ import { EnglishTeacher } from "@/components/EnglishTeacher";
 import { PerformanceMonitor } from "@/components/PerformanceMonitor";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { Menu } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 const Index = () => {
   return (
@@ -14,12 +12,7 @@ const Index = () => {
         <main className="flex-1 flex flex-col">
           {/* Mobile header with hamburger menu */}
           <header className="lg:hidden bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b px-4 py-3 flex items-center gap-2">
-            <SidebarTrigger asChild>
-              <Button variant="ghost" size="icon" className="lg:hidden">
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle navigation menu</span>
-              </Button>
-            </SidebarTrigger>
+            <SidebarTrigger />
             <h1 className="font-semibold">English Teacher</h1>
           </header>
 
