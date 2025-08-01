@@ -65,6 +65,7 @@ export const SystemMonitorDashboard: React.FC<SystemMonitorDashboardProps> = ({
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [isRunningTest, setIsRunningTest] = useState(false);
   const [orchestrator, setOrchestrator] = useState<any>(null);
+  const [isVoiceTestsMuted, setIsVoiceTestsMuted] = useState(false);
 
   useEffect(() => {
     // Dynamically import the orchestrator to avoid issues
@@ -73,6 +74,7 @@ export const SystemMonitorDashboard: React.FC<SystemMonitorDashboardProps> = ({
         const { SystemTestOrchestrator } = await import('../services/systemTestOrchestrator');
         const newOrchestrator = new SystemTestOrchestrator();
         setOrchestrator(newOrchestrator);
+        setIsVoiceTestsMuted(newOrchestrator.isVoiceTestsMuted());
         
         // Start continuous monitoring
         newOrchestrator.startContinuousMonitoring(5);
@@ -83,6 +85,7 @@ export const SystemMonitorDashboard: React.FC<SystemMonitorDashboardProps> = ({
           const results = newOrchestrator.getLatestResults(20);
           setSystemHealth(health);
           setTestResults(results);
+          setIsVoiceTestsMuted(newOrchestrator.isVoiceTestsMuted());
         }, 30000);
 
         return () => {
@@ -110,6 +113,17 @@ export const SystemMonitorDashboard: React.FC<SystemMonitorDashboardProps> = ({
       console.error('Manual test failed:', error);
     } finally {
       setIsRunningTest(false);
+    }
+  };
+
+  const toggleVoiceTests = () => {
+    if (orchestrator) {
+      if (isVoiceTestsMuted) {
+        orchestrator.unmuteVoiceTests();
+      } else {
+        orchestrator.muteVoiceTests();
+      }
+      setIsVoiceTestsMuted(!isVoiceTestsMuted);
     }
   };
 
@@ -195,6 +209,16 @@ export const SystemMonitorDashboard: React.FC<SystemMonitorDashboardProps> = ({
               )}
               Run Test
             </Button>
+            
+            <Button
+              variant={isVoiceTestsMuted ? "destructive" : "outline"}
+              size="sm"
+              onClick={toggleVoiceTests}
+              className="gap-2"
+            >
+              {isVoiceTestsMuted ? "🔇 Voice Tests Muted" : "🔊 Voice Tests Active"}
+            </Button>
+            
             <Button onClick={onToggle} variant="ghost">
               <EyeOff className="h-4 w-4" />
               Hide
