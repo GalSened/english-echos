@@ -54,7 +54,7 @@ export const UserSetup = ({ onComplete }: UserSetupProps) => {
   const isComplete = name.trim() !== "";
 
   return (
-    <div className="max-w-lg mx-auto p-6 space-y-6">
+    <div className="max-w-lg mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* Main Page Button - properly aligned */}
       <div className="flex justify-center">
         <Button 

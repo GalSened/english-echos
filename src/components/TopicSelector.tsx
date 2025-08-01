@@ -74,12 +74,12 @@ export const TopicSelector = ({ userName, userLevel, onTopicSelect }: TopicSelec
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold mb-2">
+    <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="text-center px-2">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">
           Hello {userName}! 👋
         </h1>
-        <p className="text-muted-foreground text-lg mb-4">
+        <p className="text-sm sm:text-lg text-muted-foreground mb-4">
           Here are {userLevel} level topics generated just for you!
         </p>
         <Button 
@@ -87,37 +87,38 @@ export const TopicSelector = ({ userName, userLevel, onTopicSelect }: TopicSelec
           disabled={isLoadingTopics}
           variant="outline"
           size="sm"
-          className="mb-4"
+          className="mb-4 text-xs sm:text-sm px-3 sm:px-4"
         >
           {isLoadingTopics ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 animate-spin" />
           ) : (
-            <RefreshCw className="h-4 w-4 mr-2" />
+            <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
           )}
-          {isLoadingTopics ? "Generating..." : "Generate New Topics"}
+          <span className="hidden sm:inline">{isLoadingTopics ? "Generating..." : "Generate New Topics"}</span>
+          <span className="sm:hidden">{isLoadingTopics ? "Loading..." : "Refresh"}</span>
         </Button>
       </div>
 
       {isLoadingTopics ? (
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
             <Card key={i} className="animate-pulse">
-              <CardHeader className="pb-3">
-                <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
-                <div className="h-6 bg-muted rounded"></div>
+              <CardHeader className="pb-2 sm:pb-3">
+                <div className="h-3 sm:h-4 bg-muted rounded w-3/4 mb-1 sm:mb-2"></div>
+                <div className="h-4 sm:h-6 bg-muted rounded"></div>
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="space-y-2">
-                  <div className="h-3 bg-muted rounded"></div>
-                  <div className="h-3 bg-muted rounded w-5/6"></div>
-                  <div className="h-3 bg-muted rounded w-4/6"></div>
+                  <div className="h-2 sm:h-3 bg-muted rounded"></div>
+                  <div className="h-2 sm:h-3 bg-muted rounded w-5/6"></div>
+                  <div className="h-2 sm:h-3 bg-muted rounded w-4/6"></div>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {generatedTopics.map((topic, index) => (
             <Card 
               key={index} 
@@ -153,33 +154,35 @@ export const TopicSelector = ({ userName, userLevel, onTopicSelect }: TopicSelec
       </div>
 
       <Card className="bg-gradient-to-br from-secondary/20 to-accent/20">
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           {!showCustom ? (
             <Button 
               onClick={() => setShowCustom(true)}
               variant="outline"
-              className="w-full"
+              className="w-full touch-manipulation"
               size="lg"
             >
               <Plus className="h-4 w-4 mr-2" />
               Create Custom Topic
             </Button>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Custom Topic</label>
+                <label className="text-xs sm:text-sm font-medium">Custom Topic</label>
                 <Input
-                  placeholder="e.g., Discussing climate change, Planning a vacation, Cooking recipes..."
+                  placeholder="e.g., Discussing climate change, Planning a vacation..."
                   value={customTopic}
                   onChange={(e) => setCustomTopic(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && handleCustomTopicSubmit()}
+                  className="text-sm sm:text-base"
                 />
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Button 
                   onClick={handleCustomTopicSubmit}
                   disabled={!customTopic.trim()}
-                  className="flex-1"
+                  className="flex-1 touch-manipulation"
+                  size="sm"
                 >
                   Start Custom Conversation
                 </Button>
@@ -189,6 +192,8 @@ export const TopicSelector = ({ userName, userLevel, onTopicSelect }: TopicSelec
                     setCustomTopic("");
                   }}
                   variant="outline"
+                  className="touch-manipulation"
+                  size="sm"
                 >
                   Cancel
                 </Button>

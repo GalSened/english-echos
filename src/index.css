@@ -119,12 +119,35 @@
   }
 }
 
+/* Mobile optimizations */
 @layer base {
   * {
     @apply border-border;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    touch-action: manipulation;
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
     @apply bg-background text-foreground;
+    overscroll-behavior: contain;
+  }
+
+  /* Touch-friendly interactive elements */
+  button, [role="button"], input, select, textarea {
+    touch-action: manipulation;
+  }
+
+  /* Better scrolling on mobile */
+  .scroll-area {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Improved focus for mobile accessibility */
+  .focus-visible {
+    @apply outline-2 outline-primary;
   }
 }

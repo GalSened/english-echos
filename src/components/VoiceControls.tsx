@@ -50,31 +50,33 @@ export const VoiceControls = ({
 
   return (
     <Card className="w-full">
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            Voice Controls
+      <CardContent className="p-3 sm:p-4">
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
+          <h3 className="text-sm sm:text-base font-semibold flex items-center gap-2">
+            <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">Voice Controls</span>
+            <span className="sm:hidden">Voice</span>
           </h3>
           <Button
             variant="outline"
             size="sm"
             onClick={() => setIsExpanded(!isExpanded)}
+            className="text-xs sm:text-sm px-2 sm:px-3"
           >
             {isExpanded ? "Hide" : "Show"}
           </Button>
         </div>
 
         {isExpanded && (
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {/* Volume Control */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-medium flex items-center gap-2">
-                  {volume === 0 ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                <label className="text-xs sm:text-sm font-medium flex items-center gap-1 sm:gap-2">
+                  {volume === 0 ? <VolumeX className="h-3 w-3 sm:h-4 sm:w-4" /> : <Volume2 className="h-3 w-3 sm:h-4 sm:w-4" />}
                   Volume
                 </label>
-                <span className="text-sm text-muted-foreground">{Math.round(volume * 100)}%</span>
+                <span className="text-xs sm:text-sm text-muted-foreground">{Math.round(volume * 100)}%</span>
               </div>
               <Slider
                 value={[volume]}
@@ -82,29 +84,31 @@ export const VoiceControls = ({
                 max={1}
                 min={0}
                 step={0.1}
-                className="w-full"
+                className="w-full h-8 sm:h-auto touch-manipulation"
               />
             </div>
 
             {/* Microphone Toggle */}
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium">Microphone</label>
+              <label className="text-xs sm:text-sm font-medium">Microphone</label>
               <Button
                 variant={isListening ? "default" : "outline"}
                 size="sm"
                 onClick={isListening ? onStopListening : onStartListening}
                 disabled={!isConnected}
-                className={isListening ? "bg-speaking hover:bg-speaking/90" : ""}
+                className={`text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2 ${isListening ? "bg-speaking hover:bg-speaking/90" : ""}`}
               >
                 {isListening ? (
                   <>
-                    <Mic className="h-4 w-4 mr-2" />
-                    Listening
+                    <Mic className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">Listening</span>
+                    <span className="sm:hidden">On</span>
                   </>
                 ) : (
                   <>
-                    <MicOff className="h-4 w-4 mr-2" />
-                    Start Listening
+                    <MicOff className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">Start Listening</span>
+                    <span className="sm:hidden">Start</span>
                   </>
                 )}
               </Button>
@@ -112,14 +116,14 @@ export const VoiceControls = ({
 
             {/* Voice Selection */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">Voice</label>
+              <label className="text-xs sm:text-sm font-medium">Voice</label>
               <Select value={selectedVoice} onValueChange={onVoiceChange}>
-                <SelectTrigger>
+                <SelectTrigger className="h-8 sm:h-auto text-xs sm:text-sm">
                   <SelectValue placeholder="Select a voice" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[200px] overflow-y-auto">
                   {VOICE_OPTIONS.map((voice) => (
-                    <SelectItem key={voice.id} value={voice.id}>
+                    <SelectItem key={voice.id} value={voice.id} className="text-xs sm:text-sm">
                       {voice.name}
                     </SelectItem>
                   ))}
@@ -129,18 +133,19 @@ export const VoiceControls = ({
 
             {/* Voice Mute Toggle */}
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium">System Voices</label>
+              <label className="text-xs sm:text-sm font-medium">System Voices</label>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={voicesMuted ? onUnmuteVoices : onMuteAllVoices}
+                className="text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
               >
                 {voicesMuted ? "🔇 Muted" : "🔊 Active"}
               </Button>
             </div>
 
             {/* Connection Status */}
-            <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center justify-between text-xs sm:text-sm">
               <span>Status:</span>
               <span className={`font-medium ${isConnected ? "text-teacher" : "text-muted-foreground"}`}>
                 {isConnected ? "Connected" : "Disconnected"}

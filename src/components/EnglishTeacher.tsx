@@ -600,104 +600,109 @@ export const EnglishTeacher = () => {
 
   // Conversation state
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
+    <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="text-center">
+      <div className="text-center px-2">
         <TeacherAvatar isSpeaking={isSpeaking} className="mx-auto mb-4" />
-        <h1 className="text-3xl font-bold mb-2">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">
           {selectedTopic?.title} Practice
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-sm sm:text-base text-muted-foreground">
           Practicing with {userInfo?.name} • {selectedTopic?.description}
         </p>
       </div>
 
-      <div className="grid lg:grid-cols-4 gap-6">
-        {/* Voice Controls Sidebar */}
-        <div className="lg:col-span-1 space-y-4">
-          <StatusIndicator
-            webSpeechSupported={webSpeechService?.isSupported() || false}
-            elevenLabsAvailable={elevenLabsAvailable}
-            microphonePermission={microphonePermission}
-          />
+      <div className="flex flex-col lg:grid lg:grid-cols-4 gap-4 lg:gap-6">
+        {/* Voice Controls - Mobile: Top Section, Desktop: Sidebar */}
+        <div className="lg:col-span-1 order-2 lg:order-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+            <StatusIndicator
+              webSpeechSupported={webSpeechService?.isSupported() || false}
+              elevenLabsAvailable={elevenLabsAvailable}
+              microphonePermission={microphonePermission}
+            />
+            
+            <VoiceControls
+              volume={volume}
+              onVolumeChange={handleVolumeChange}
+              onStartListening={handleStartListening}
+              onStopListening={() => webSpeechService.stopListening()}
+              isListening={isListening}
+              isConnected={webSpeechService?.isSupported() || false}
+              voicesMuted={voicesMuted}
+              onMuteAllVoices={handleMuteAllVoices}
+              onUnmuteVoices={handleUnmuteVoices}
+              selectedVoice={selectedVoice}
+              onVoiceChange={setSelectedVoice}
+            />
+          </div>
           
-          <VoiceControls
-            volume={volume}
-            onVolumeChange={handleVolumeChange}
-            onStartListening={handleStartListening}
-            onStopListening={() => webSpeechService.stopListening()}
-            isListening={isListening}
-            isConnected={webSpeechService?.isSupported() || false}
-            voicesMuted={voicesMuted}
-            onMuteAllVoices={handleMuteAllVoices}
-            onUnmuteVoices={handleUnmuteVoices}
-            selectedVoice={selectedVoice}
-            onVoiceChange={setSelectedVoice}
-          />
-          
-          <Card>
+          <Card className="mt-4">
             <CardContent className="p-4 space-y-3">
               <Button 
                 onClick={handleEndConversation}
                 variant="outline"
-                className="w-full"
+                className="w-full text-sm"
+                size="sm"
               >
                 <BarChart3 className="h-4 w-4 mr-2" />
                 End & Analyze
               </Button>
               
-              <Button 
-                onClick={handleNewTopic}
-                variant="outline"
-                className="w-full"
-                size="sm"
-              >
-                Change Topic
-              </Button>
-              
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button 
-                    variant="outline"
-                    className="w-full"
-                    size="sm"
-                  >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Exit Session
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Exit Session</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Are you sure you want to exit? This will end your current conversation and return you to the setup screen.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleExitToSetup}>
+              <div className="grid grid-cols-2 lg:grid-cols-1 gap-2">
+                <Button 
+                  onClick={handleNewTopic}
+                  variant="outline"
+                  className="w-full text-sm"
+                  size="sm"
+                >
+                  Change Topic
+                </Button>
+                
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button 
+                      variant="outline"
+                      className="w-full text-sm"
+                      size="sm"
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
                       Exit Session
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="w-[90vw] max-w-md">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Exit Session</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to exit? This will end your current conversation and return you to the setup screen.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                      <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleExitToSetup} className="w-full sm:w-auto">
+                        Exit Session
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Conversation Area */}
-        <div className="lg:col-span-3">
-          <Card className="h-[600px] flex flex-col">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+        <div className="lg:col-span-3 order-1 lg:order-2">
+          <Card className="h-[50vh] sm:h-[60vh] lg:h-[600px] flex flex-col">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
                 <MessageCircle className="h-5 w-5" />
                 Conversation
               </CardTitle>
             </CardHeader>
             
             <CardContent className="flex-1 flex flex-col p-0">
-              <ScrollArea className="flex-1 px-6" ref={scrollAreaRef}>
-                <div className="space-y-4">
+              <ScrollArea className="flex-1 px-4 sm:px-6" ref={scrollAreaRef}>
+                <div className="space-y-3 sm:space-y-4 pb-4">
                   {messages.map((message) => (
                     <div key={message.id} className="space-y-2">
                       <ConversationMessage
@@ -709,7 +714,7 @@ export const EnglishTeacher = () => {
                       {message.correction && !message.isTeacher && (
                         <ErrorCorrection 
                           correction={message.correction}
-                          className="ml-12"
+                          className="ml-8 sm:ml-12"
                         />
                       )}
                     </div>
@@ -719,12 +724,12 @@ export const EnglishTeacher = () => {
 
               <Separator />
               
-              <div className="p-4 text-center">
+              <div className="p-3 sm:p-4 text-center">
                 <Button 
                   onClick={isListening ? handleStopListening : handleStartListening}
                   disabled={!webSpeechService?.isSupported()}
                   size="lg"
-                  className={`px-8 py-6 text-lg font-medium transition-all ${
+                  className={`w-full sm:w-auto px-6 sm:px-8 py-4 sm:py-6 text-base sm:text-lg font-medium transition-all ${
                     isListening 
                       ? "bg-destructive hover:bg-destructive/90 animate-pulse" 
                       : "bg-primary hover:bg-primary/90"
@@ -732,8 +737,8 @@ export const EnglishTeacher = () => {
                 >
                   {isListening ? "🎤 Listening..." : "🎤 Speak to respond"}
                 </Button>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Click the button and speak your response
+                <p className="text-xs sm:text-sm text-muted-foreground mt-2">
+                  {isListening ? "Speak now" : "Click the button and speak your response"}
                 </p>
               </div>
             </CardContent>
@@ -753,10 +758,11 @@ export const EnglishTeacher = () => {
           onClick={() => setShowSystemMonitor(true)}
           variant="outline"
           size="sm"
-          className="fixed bottom-4 left-4 z-40"
+          className="fixed bottom-4 left-4 z-40 text-xs sm:text-sm"
         >
-          <Shield className="h-4 w-4 mr-2" />
-          System Monitor
+          <Shield className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+          <span className="hidden sm:inline">System Monitor</span>
+          <span className="sm:hidden">Monitor</span>
         </Button>
       )}
     </div>
