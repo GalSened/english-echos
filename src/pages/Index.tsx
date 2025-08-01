@@ -7,7 +7,7 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-secondary/20">
       <div className="container mx-auto py-8 relative">
         {/* Theme selector positioned on the left side */}
-        <div className="fixed top-4 left-4 z-50 hidden md:block">
+        <div className="fixed top-4 left-6 z-50 hidden md:block">
           <ThemeSelector />
         </div>
         

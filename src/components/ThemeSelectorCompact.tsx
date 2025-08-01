@@ -43,7 +43,7 @@ export const ThemeSelectorCompact = () => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent 
-        align="end" 
+        align="start" 
         className="w-36 z-50 bg-popover border border-border shadow-lg backdrop-blur-sm"
       >
         {themes.map((themeOption) => {
