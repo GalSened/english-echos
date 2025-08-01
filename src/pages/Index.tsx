@@ -1,28 +1,38 @@
 import { EnglishTeacher } from "@/components/EnglishTeacher";
-import { ThemeSelector } from "@/components/ThemeSelector";
-import { ThemeSelectorCompact } from "@/components/ThemeSelectorCompact";
 import { PerformanceMonitor } from "@/components/PerformanceMonitor";
+import { AppSidebar } from "@/components/AppSidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { Menu } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-secondary/20">
-      <div className="container mx-auto px-4 py-4 sm:py-6 lg:py-8 relative">
-        {/* Theme selector positioned on the left side */}
-        <div className="fixed top-2 sm:top-4 left-2 sm:left-6 z-50 hidden md:block">
-          <ThemeSelector />
-        </div>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-gradient-to-br from-background via-muted/30 to-secondary/20">
+        <AppSidebar />
         
-        {/* Mobile theme selector - compact version on the left */}
-        <div className="md:hidden mb-4 flex justify-start px-2">
-          <ThemeSelectorCompact />
-        </div>
+        <main className="flex-1 flex flex-col">
+          {/* Mobile header with hamburger menu */}
+          <header className="lg:hidden bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b px-4 py-3 flex items-center gap-2">
+            <SidebarTrigger asChild>
+              <Button variant="ghost" size="icon" className="lg:hidden">
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">Toggle navigation menu</span>
+              </Button>
+            </SidebarTrigger>
+            <h1 className="font-semibold">English Teacher</h1>
+          </header>
+
+          {/* Main content */}
+          <div className="flex-1 container mx-auto px-4 py-4 sm:py-6 lg:py-8">
+            <EnglishTeacher />
+          </div>
+        </main>
         
-        <EnglishTeacher />
+        {/* Performance monitor for debugging */}
+        <PerformanceMonitor />
       </div>
-      
-      {/* Performance monitor for debugging */}
-      <PerformanceMonitor />
-    </div>
+    </SidebarProvider>
   );
 };
 

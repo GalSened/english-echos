@@ -44,7 +44,7 @@ export const ThemeSelectorCompact = () => {
       </DropdownMenuTrigger>
       <DropdownMenuContent 
         align="start" 
-        className="w-36 z-50 bg-popover border border-border shadow-lg backdrop-blur-sm"
+        className="w-36 z-50 bg-popover/95 border border-border shadow-lg backdrop-blur-sm"
       >
         {themes.map((themeOption) => {
           const Icon = themeOption.icon;

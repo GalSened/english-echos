@@ -81,7 +81,7 @@ export const ThemeSelector = () => {
       {/* Dropdown Menu */}
       {isOpen && (
         <div className="absolute top-full left-0 mt-2 z-[60]">
-          <Card className="w-64 shadow-lg border-border/50 backdrop-blur-sm bg-popover border">
+          <Card className="w-64 shadow-lg border-border/50 backdrop-blur-sm bg-popover/95 border">
             <CardHeader className="pb-2 pt-3 px-3">
               <CardTitle className="flex items-center gap-2 text-sm">
                 <Palette className="h-3 w-3" />
