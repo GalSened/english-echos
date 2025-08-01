@@ -52,6 +52,7 @@ export const EnglishTeacher = () => {
   const [volume, setVolume] = useState(0.7);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [voicesMuted, setVoicesMuted] = useState(false);
   const [conversationAnalysis, setConversationAnalysis] = useState<AnalysisType | null>(null);
   const [openAIService, setOpenAIService] = useState<SupabaseOpenAIService | null>(null);
   const [webSpeechService, setWebSpeechService] = useState<WebSpeechService | null>(null);
@@ -119,8 +120,8 @@ export const EnglishTeacher = () => {
     };
     setMessages(prev => [...prev, newMessage]);
     
-    // If it's a teacher message, speak it
-    if (isTeacher) {
+    // If it's a teacher message, speak it (only if voices are not muted)
+    if (isTeacher && !voicesMuted) {
       setIsSpeaking(true);
       
       // Try ElevenLabs first, fallback to Web Speech
@@ -134,11 +135,6 @@ export const EnglishTeacher = () => {
               return;
             } catch (error) {
               console.error('ElevenLabs failed, falling back to Web Speech:', error);
-              toast({
-                title: "Voice Notice",
-                description: "Using browser voice (ElevenLabs unavailable)",
-                duration: 2000,
-              });
               if (webSpeechService) {
                 try {
                   await webSpeechService.speak(text);
@@ -146,21 +142,9 @@ export const EnglishTeacher = () => {
                   return;
                 } catch (fallbackError) {
                   console.error('All speech services failed:', fallbackError);
-                  toast({
-                    title: "Voice Error", 
-                    description: "All voice services failed. Check console for details.",
-                    variant: "destructive",
-                    duration: 3000,
-                  });
                   throw fallbackError;
                 }
               } else {
-                toast({
-                  title: "Voice Error",
-                  description: "No voice services available",
-                  variant: "destructive", 
-                  duration: 3000,
-                });
                 throw error;
               }
             }
@@ -171,24 +155,8 @@ export const EnglishTeacher = () => {
               console.log('Web Speech completed successfully');
             } catch (error) {
               console.error('Web Speech failed:', error);
-              toast({
-                title: "Voice Error",
-                description: "Voice synthesis failed",
-                variant: "destructive",
-                duration: 3000,
-              });
               throw error;
             }
-          } else {
-            const errorMsg = "No voice services available";
-            console.error(errorMsg);
-            toast({
-              title: "Voice Error",
-              description: errorMsg,
-              variant: "destructive",
-              duration: 3000,
-            });
-            throw new Error(errorMsg);
           }
         } finally {
           setIsSpeaking(false);
@@ -228,6 +196,33 @@ export const EnglishTeacher = () => {
     
     // Add brief welcome message - student should be the main speaker
     addMessage(`Hi ${userInfo?.name}! Ready to talk about ${topic.title}?`, true);
+  };
+
+  const handleMuteAllVoices = () => {
+    // Stop any ongoing speech immediately
+    if (elevenLabsService) {
+      elevenLabsService.stopSpeaking();
+    }
+    if (webSpeechService) {
+      webSpeechService.stopSpeaking();
+    }
+    setIsSpeaking(false);
+    setVoicesMuted(true);
+    
+    toast({
+      title: "All voices muted",
+      description: "System voices have been silenced",
+      duration: 2000,
+    });
+  };
+
+  const handleUnmuteVoices = () => {
+    setVoicesMuted(false);
+    toast({
+      title: "Voices enabled",
+      description: "System voices are now active again",
+      duration: 2000,
+    });
   };
 
   const handleEndConversation = async () => {
@@ -616,6 +611,21 @@ export const EnglishTeacher = () => {
             isListening={isListening}
             isConnected={webSpeechService?.isSupported() || false}
           />
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">System Voices</span>
+                <Button
+                  variant={voicesMuted ? "destructive" : "outline"}
+                  size="sm"
+                  onClick={voicesMuted ? handleUnmuteVoices : handleMuteAllVoices}
+                >
+                  {voicesMuted ? "🔇 Muted" : "🔊 Active"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
           
           <Card>
             <CardContent className="p-4 space-y-3">
