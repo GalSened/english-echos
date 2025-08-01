@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Volume2, VolumeX, Settings, Mic, MicOff } from "lucide-react";
 import { useState } from "react";
 
@@ -11,7 +12,25 @@ interface VoiceControlsProps {
   onStopListening: () => void;
   isListening: boolean;
   isConnected: boolean;
+  voicesMuted: boolean;
+  onMuteAllVoices: () => void;
+  onUnmuteVoices: () => void;
+  selectedVoice: string;
+  onVoiceChange: (voiceId: string) => void;
 }
+
+const VOICE_OPTIONS = [
+  { id: "9BWtsMINqrJLrRacOk9x", name: "Aria (Female)" },
+  { id: "CwhRBWXzGAHq8TQ4Fs17", name: "Roger (Male)" },
+  { id: "EXAVITQu4vr4xnSDxMaL", name: "Sarah (Female)" },
+  { id: "FGY2WhTYpPnrIDTdsKH5", name: "Laura (Female)" },
+  { id: "IKne3meq5aSn9XLyUdCD", name: "Charlie (Male)" },
+  { id: "JBFqnCBsd6RMkjVDRZzb", name: "George (Male)" },
+  { id: "N2lVS1w4EtoT3dr4eOWO", name: "Callum (Male)" },
+  { id: "SAz9YHcvj6GT2YYXdXww", name: "River (Neutral)" },
+  { id: "TX3LPaxmHKxFdv7VOQHJ", name: "Liam (Male)" },
+  { id: "XB0fDUnXU5powFXDhCwa", name: "Charlotte (Female)" }
+];
 
 export const VoiceControls = ({
   volume,
@@ -19,7 +38,12 @@ export const VoiceControls = ({
   onStartListening,
   onStopListening,
   isListening,
-  isConnected
+  isConnected,
+  voicesMuted,
+  onMuteAllVoices,
+  onUnmuteVoices,
+  selectedVoice,
+  onVoiceChange
 }: VoiceControlsProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -82,6 +106,35 @@ export const VoiceControls = ({
                     Start Listening
                   </>
                 )}
+              </Button>
+            </div>
+
+            {/* Voice Selection */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Voice</label>
+              <Select value={selectedVoice} onValueChange={onVoiceChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a voice" />
+                </SelectTrigger>
+                <SelectContent>
+                  {VOICE_OPTIONS.map((voice) => (
+                    <SelectItem key={voice.id} value={voice.id}>
+                      {voice.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Voice Mute Toggle */}
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium">System Voices</label>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={voicesMuted ? onUnmuteVoices : onMuteAllVoices}
+              >
+                {voicesMuted ? "🔇 Muted" : "🔊 Active"}
               </Button>
             </div>
 

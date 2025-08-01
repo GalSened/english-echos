@@ -53,6 +53,7 @@ export const EnglishTeacher = () => {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [voicesMuted, setVoicesMuted] = useState(false);
+  const [selectedVoice, setSelectedVoice] = useState("9BWtsMINqrJLrRacOk9x"); // Default to Aria
   const [conversationAnalysis, setConversationAnalysis] = useState<AnalysisType | null>(null);
   const [openAIService, setOpenAIService] = useState<SupabaseOpenAIService | null>(null);
   const [webSpeechService, setWebSpeechService] = useState<WebSpeechService | null>(null);
@@ -129,8 +130,8 @@ export const EnglishTeacher = () => {
         try {
           if (elevenLabsService) {
             try {
-              console.log('Attempting ElevenLabs speech with Aria voice...');
-              await elevenLabsService.speak(text, "9BWtsMINqrJLrRacOk9x"); // Aria voice ID
+              console.log(`Attempting ElevenLabs speech with voice: ${selectedVoice}...`);
+              await elevenLabsService.speak(text, selectedVoice);
               console.log('ElevenLabs speech completed successfully');
               return;
             } catch (error) {
@@ -607,25 +608,15 @@ export const EnglishTeacher = () => {
             volume={volume}
             onVolumeChange={handleVolumeChange}
             onStartListening={handleStartListening}
-            onStopListening={handleStopListening}
+            onStopListening={() => webSpeechService.stopListening()}
             isListening={isListening}
             isConnected={webSpeechService?.isSupported() || false}
+            voicesMuted={voicesMuted}
+            onMuteAllVoices={handleMuteAllVoices}
+            onUnmuteVoices={handleUnmuteVoices}
+            selectedVoice={selectedVoice}
+            onVoiceChange={setSelectedVoice}
           />
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">System Voices</span>
-                <Button
-                  variant={voicesMuted ? "destructive" : "outline"}
-                  size="sm"
-                  onClick={voicesMuted ? handleUnmuteVoices : handleMuteAllVoices}
-                >
-                  {voicesMuted ? "🔇 Muted" : "🔊 Active"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
           
           <Card>
             <CardContent className="p-4 space-y-3">
