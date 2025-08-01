@@ -54,6 +54,8 @@ export const EnglishTeacher = () => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [voicesMuted, setVoicesMuted] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState("9BWtsMINqrJLrRacOk9x"); // Default to Aria
+  const [speechQueue, setSpeechQueue] = useState<Array<{id: string, text: string}>>([]);
+  const [isProcessingSpeech, setIsProcessingSpeech] = useState(false);
   const [conversationAnalysis, setConversationAnalysis] = useState<AnalysisType | null>(null);
   const [openAIService, setOpenAIService] = useState<SupabaseOpenAIService | null>(null);
   const [webSpeechService, setWebSpeechService] = useState<WebSpeechService | null>(null);
@@ -111,6 +113,63 @@ export const EnglishTeacher = () => {
     }
   }, []);
 
+  // Speech queue processor
+  useEffect(() => {
+    const processSpeechQueue = async () => {
+      if (isProcessingSpeech || speechQueue.length === 0 || voicesMuted) {
+        return;
+      }
+
+      setIsProcessingSpeech(true);
+      setIsSpeaking(true);
+
+      const item = speechQueue[0];
+      setSpeechQueue(prev => prev.slice(1));
+
+      try {
+        if (elevenLabsService) {
+          try {
+            console.log(`Attempting ElevenLabs speech with voice: ${selectedVoice}...`);
+            await elevenLabsService.speak(item.text, selectedVoice);
+            console.log('ElevenLabs speech completed successfully');
+          } catch (error) {
+            console.error('ElevenLabs failed, falling back to Web Speech:', error);
+            if (webSpeechService) {
+              try {
+                await webSpeechService.speak(item.text);
+                console.log('Web Speech fallback completed');
+              } catch (fallbackError) {
+                console.error('All speech services failed:', fallbackError);
+              }
+            }
+          }
+        } else if (webSpeechService) {
+          try {
+            console.log('Using Web Speech service...');
+            await webSpeechService.speak(item.text);
+            console.log('Web Speech completed successfully');
+          } catch (error) {
+            console.error('Web Speech failed:', error);
+          }
+        }
+      } catch (unexpectedError) {
+        console.error('Unexpected error in speech queue processor:', unexpectedError);
+      } finally {
+        setIsProcessingSpeech(false);
+        setIsSpeaking(false);
+        // Continue processing the queue after a brief delay to prevent blocking
+        setTimeout(() => {
+          if (speechQueue.length > 0) {
+            // Trigger the effect again by updating a dummy state if needed
+            processSpeechQueue();
+          }
+        }, 100);
+      }
+    };
+
+    processSpeechQueue();
+  }, [speechQueue, isProcessingSpeech, voicesMuted, elevenLabsService, webSpeechService, selectedVoice]);
+
   const addMessage = useCallback((text: string, isTeacher: boolean): string => {
     const id = Date.now().toString();
     const newMessage: Message = {
@@ -121,54 +180,13 @@ export const EnglishTeacher = () => {
     };
     setMessages(prev => [...prev, newMessage]);
     
-    // If it's a teacher message, speak it (only if voices are not muted)
+    // If it's a teacher message and voices are not muted, add to speech queue
     if (isTeacher && !voicesMuted) {
-      setIsSpeaking(true);
-      
-      // Try ElevenLabs first, fallback to Web Speech
-      const speakWithService = async () => {
-        try {
-          if (elevenLabsService) {
-            try {
-              console.log(`Attempting ElevenLabs speech with voice: ${selectedVoice}...`);
-              await elevenLabsService.speak(text, selectedVoice);
-              console.log('ElevenLabs speech completed successfully');
-              return;
-            } catch (error) {
-              console.error('ElevenLabs failed, falling back to Web Speech:', error);
-              if (webSpeechService) {
-                try {
-                  await webSpeechService.speak(text);
-                  console.log('Web Speech fallback completed');
-                  return;
-                } catch (fallbackError) {
-                  console.error('All speech services failed:', fallbackError);
-                  throw fallbackError;
-                }
-              } else {
-                throw error;
-              }
-            }
-          } else if (webSpeechService) {
-            try {
-              console.log('Using Web Speech service...');
-              await webSpeechService.speak(text);
-              console.log('Web Speech completed successfully');
-            } catch (error) {
-              console.error('Web Speech failed:', error);
-              throw error;
-            }
-          }
-        } finally {
-          setIsSpeaking(false);
-        }
-      };
-      
-      speakWithService();
+      setSpeechQueue(prev => [...prev, { id, text }]);
     }
     
     return id;
-  }, [elevenLabsService, webSpeechService]);
+  }, [voicesMuted]);
 
   const scrollToBottom = () => {
     if (scrollAreaRef.current) {
@@ -208,6 +226,9 @@ export const EnglishTeacher = () => {
       webSpeechService.stopSpeaking();
     }
     setIsSpeaking(false);
+    setIsProcessingSpeech(false);
+    // Clear the speech queue
+    setSpeechQueue([]);
     setVoicesMuted(true);
     
     toast({
