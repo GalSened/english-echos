@@ -157,13 +157,7 @@ export const EnglishTeacher = () => {
       } finally {
         setIsProcessingSpeech(false);
         setIsSpeaking(false);
-        // Continue processing the queue after a brief delay to prevent blocking
-        setTimeout(() => {
-          if (speechQueue.length > 0) {
-            // Trigger the effect again by updating a dummy state if needed
-            processSpeechQueue();
-          }
-        }, 100);
+        // Don't auto-continue - let the useEffect trigger naturally for next items
       }
     };
 
@@ -488,6 +482,21 @@ export const EnglishTeacher = () => {
   }, [webSpeechService]);
 
   const handleExitToSetup = useCallback(() => {
+    // Stop all speech immediately
+    if (elevenLabsService) {
+      elevenLabsService.stopSpeaking();
+    }
+    if (webSpeechService) {
+      webSpeechService.stopSpeaking();
+      webSpeechService.stopListening();
+    }
+    
+    // Clear speech queue and reset speech states
+    setSpeechQueue([]);
+    setIsProcessingSpeech(false);
+    setIsSpeaking(false);
+    setIsListening(false);
+    
     // Reset all state to start fresh
     setUserInfo(null);
     setSelectedTopic(null);
@@ -498,18 +507,11 @@ export const EnglishTeacher = () => {
     // Clear session storage
     sessionStorage.removeItem('englishTeacher_userInfo');
     
-    // Stop any ongoing speech
-    if (webSpeechService) {
-      webSpeechService.stopListening();
-    }
-    setIsListening(false);
-    setIsSpeaking(false);
-    
     toast({
       title: "Session ended",
       description: "You've been returned to the setup screen.",
     });
-  }, [webSpeechService, toast]);
+  }, [elevenLabsService, webSpeechService, toast]);
 
   // Render different states
   if (appState === 'setup') {
