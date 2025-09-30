@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # PocketBase backend
+  pocketbase:
+    image: ghcr.io/muchobien/pocketbase:latest
+    container_name: speakeng-pocketbase
+    restart: unless-stopped
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./pb_data:/pb/pb_data
+      - ./pb_migrations:/pb/pb_migrations
+      - ./pb_hooks:/pb/pb_hooks
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8090/api/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    environment:
+      - POCKETBASE_ADMIN_EMAIL=${POCKETBASE_ADMIN_EMAIL:-admin@speakeng.local}
+      - POCKETBASE_ADMIN_PASSWORD=${POCKETBASE_ADMIN_PASSWORD:-changeme123}
+
+  # Frontend application
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: speakeng-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - pocketbase
+    environment:
+      - VITE_POCKETBASE_URL=http://pocketbase:8090
+      - VITE_GROQ_API_KEY=${GROQ_API_KEY}
+      - VITE_OLLAMA_URL=${OLLAMA_URL:-http://host.docker.internal:11434}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  # Caddy reverse proxy (optional, for HTTPS)
+  caddy:
+    image: caddy:latest
+    container_name: speakeng-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+      - pocketbase
+    profiles:
+      - production
+
+volumes:
+  caddy_data:
+  caddy_config:

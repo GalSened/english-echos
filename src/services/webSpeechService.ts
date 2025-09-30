@@ -10,9 +10,9 @@ class WebSpeechService {
   private synthesis: SpeechSynthesis;
   private recognition: any = null;
   private currentVoice: SpeechSynthesisVoice | null = null;
-  private volume: number = 0.7;
-  private rate: number = 0.9;
-  private pitch: number = 1;
+  private volume: number = 0.8;  // Increased for clarity
+  private rate: number = 0.85;   // Slower for more natural speech
+  private pitch: number = 0.95;  // Slightly lower for warmer tone
 
   constructor() {
     this.synthesis = window.speechSynthesis;
@@ -23,13 +23,42 @@ class WebSpeechService {
   private initializeVoice() {
     const setVoice = () => {
       const voices = this.synthesis.getVoices();
-      // Prefer English female voices for teacher
-      const preferredVoices = voices.filter(voice => 
-        voice.lang.includes('en') && 
-        (voice.name.includes('Female') || voice.name.includes('Samantha') || voice.name.includes('Karen'))
+
+      // Priority list of natural-sounding voices
+      const preferredNames = [
+        'Samantha',           // macOS - very natural
+        'Karen',              // macOS - warm female voice
+        'Moira',              // macOS - Irish English
+        'Google US English',  // Chrome - natural
+        'Microsoft Zira',     // Windows - natural
+        'Female',             // Generic female
+      ];
+
+      // Try to find voices in priority order
+      for (const name of preferredNames) {
+        const voice = voices.find(v =>
+          v.lang.includes('en') && v.name.includes(name)
+        );
+        if (voice) {
+          this.currentVoice = voice;
+          console.log('[Voice] Selected:', voice.name);
+          return;
+        }
+      }
+
+      // Fallback: any English female voice
+      const femaleVoice = voices.find(voice =>
+        voice.lang.includes('en') &&
+        (voice.name.toLowerCase().includes('female') ||
+         voice.name.toLowerCase().includes('woman'))
       );
-      
-      this.currentVoice = preferredVoices[0] || voices.find(voice => voice.lang.includes('en')) || voices[0];
+
+      // Last resort: any English voice
+      this.currentVoice = femaleVoice ||
+                         voices.find(voice => voice.lang.includes('en')) ||
+                         voices[0];
+
+      console.log('[Voice] Selected:', this.currentVoice?.name || 'default');
     };
 
     if (this.synthesis.getVoices().length > 0) {

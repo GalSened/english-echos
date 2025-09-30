@@ -3,14 +3,14 @@ import { Card, CardContent } from "@/components/ui/card";
 
 interface StatusIndicatorProps {
   webSpeechSupported: boolean;
-  elevenLabsAvailable: boolean;
+  aiServiceAvailable: boolean;
   microphonePermission: boolean;
 }
 
-export const StatusIndicator = ({ 
-  webSpeechSupported, 
-  elevenLabsAvailable, 
-  microphonePermission 
+export const StatusIndicator = ({
+  webSpeechSupported,
+  aiServiceAvailable,
+  microphonePermission
 }: StatusIndicatorProps) => {
   return (
     <Card className="w-full">
@@ -25,16 +25,16 @@ export const StatusIndicator = ({
             )}
             <span>Speech Recognition</span>
           </div>
-          
+
           <div className="flex items-center gap-2">
-            {elevenLabsAvailable ? (
+            {aiServiceAvailable ? (
               <CheckCircle className="h-3 w-3 text-green-500" />
             ) : (
               <AlertCircle className="h-3 w-3 text-yellow-500" />
             )}
-            <span>High-Quality Voice</span>
+            <span>AI Service (Ollama/Groq)</span>
           </div>
-          
+
           <div className="flex items-center gap-2">
             {microphonePermission ? (
               <CheckCircle className="h-3 w-3 text-green-500" />

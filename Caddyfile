@@ -1,0 +1,45 @@
+# Caddyfile for reverse proxy with automatic HTTPS
+# Replace yourdomain.com with your actual domain
+
+{
+    email your-email@example.com
+}
+
+yourdomain.com {
+    # Frontend
+    handle /* {
+        reverse_proxy frontend:80
+    }
+
+    # PocketBase API
+    handle /api/* {
+        reverse_proxy pocketbase:8090
+    }
+
+    # Security headers
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    # Enable compression
+    encode gzip zstd
+
+    # Logging
+    log {
+        output file /var/log/caddy/access.log
+        format json
+    }
+}
+
+# Development/staging subdomain (optional)
+dev.yourdomain.com {
+    reverse_proxy frontend:80
+
+    handle /api/* {
+        reverse_proxy pocketbase:8090
+    }
+}

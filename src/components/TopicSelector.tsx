@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BookOpen, Plus, RefreshCw, Loader2, Sparkles } from "lucide-react";
-import { SupabaseOpenAIService } from "@/services/supabaseOpenaiService";
+import { aiService } from "@/services/aiService";
 
 interface GeneratedTopic {
   title: string;
@@ -22,13 +22,15 @@ export const TopicSelector = ({ userName, userLevel, onTopicSelect }: TopicSelec
   const [isLoadingTopics, setIsLoadingTopics] = useState(true);
   const [customTopic, setCustomTopic] = useState("");
   const [showCustom, setShowCustom] = useState(false);
-  const [aiService] = useState(() => new SupabaseOpenAIService());
 
   const loadTopics = async () => {
     setIsLoadingTopics(true);
     try {
-      const topics = await aiService.generateTopics(userName, userLevel);
-      setGeneratedTopics(topics);
+      const topics = await aiService.generateTopicSuggestions(userLevel, 8);
+      setGeneratedTopics(topics.map(title => ({
+        title,
+        description: `Let's talk about ${title.toLowerCase()}!`
+      })));
     } catch (error) {
       console.error('Error loading topics:', error);
       // Fallback topics if generation fails

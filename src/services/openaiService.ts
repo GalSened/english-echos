@@ -42,6 +42,87 @@ class OpenAIService {
   constructor(apiKey: string) {
     this.apiKey = apiKey;
   }
+  async isAvailable(): Promise<boolean> {
+    if (!this.apiKey) {
+      console.warn('OpenAI API key not configured');
+      return false;
+    }
+    try {
+      // Test API availability with a simple call
+      const response = await fetch(`${this.baseUrl}/models`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+        },
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('OpenAI availability check failed:', error);
+      return false;
+    }
+  }
+
+  async chat(messages: Array<{ role: string; content: string }>, temperature: number = 0.7): Promise<string> {
+    if (!this.apiKey) {
+      throw new Error('OpenAI API key not configured');
+    }
+
+    try {
+      const response = await fetch(`${this.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4',
+          messages,
+          temperature,
+          max_tokens: 4096,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`OpenAI API error: ${response.statusText} - ${JSON.stringify(errorData)}`);
+      }
+
+      const data: any = await response.json();
+      return data.choices[0]?.message?.content || '';
+    } catch (error) {
+      console.error('OpenAI chat error:', error);
+      throw error;
+    }
+  }
+
+  async generateTeacherResponse(
+    conversationHistory: Array<{ text: string; isTeacher: boolean }>,
+    topic: string,
+    userName: string,
+    userLevel: string
+  ): Promise<string> {
+    const messages = [
+      {
+        role: 'system',
+        content: `You are a warm, encouraging English teacher 👨‍🏫. Your student is ${userName}, at ${userLevel} level. You're having a conversation about "${topic}". 
+
+Guidelines:
+- Be natural, friendly, and supportive 🌟
+- Adapt your vocabulary and sentence complexity to ${userLevel} level
+- Ask engaging follow-up questions
+- Gently correct errors inline with encouraging phrases like "Great try! You could also say..."
+- Use occasional emojis to keep it fun and engaging
+- Keep responses concise (2-3 sentences max)
+- Show genuine interest in what the student says`,
+      },
+      ...conversationHistory.map(msg => ({
+        role: msg.isTeacher ? 'assistant' : 'user',
+        content: msg.text,
+      })),
+    ];
+
+    return this.chat(messages, 0.8);
+  }
 
   async analyzeConversation(
     userMessages: string[],

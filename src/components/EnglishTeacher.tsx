@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { WebSpeechService } from "@/services/webSpeechService";
-import { ElevenLabsService } from "@/services/elevenlabsService";
-import { SupabaseOpenAIService, ConversationAnalysis as AnalysisType, ErrorCorrection as ErrorType } from "@/services/supabaseOpenaiService";
+import { aiService } from "@/services/aiService";
+import type { ConversationAnalysis as AnalysisType, ErrorCorrection as ErrorType } from "@/services/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,11 +15,11 @@ import { VoiceControls } from "./VoiceControls";
 import { TeacherAvatar } from "./TeacherAvatar";
 import { ErrorCorrection } from "./ErrorCorrection";
 import { AdvancedConversationAnalysis } from "./AdvancedConversationAnalysis";
-import { SystemMonitorDashboard } from "./SystemMonitorDashboard";
 import { StatusIndicator } from "./StatusIndicator";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
 import { analytics } from "@/utils/analytics";
+import { markPracticeToday } from "@/lib/notifications";
 
 import { Send, MessageCircle, BarChart3, AlertCircle, LogOut, Home, Shield, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -61,12 +61,9 @@ export const EnglishTeacher = () => {
   const [speechQueue, setSpeechQueue] = useState<Array<{id: string, text: string}>>([]);
   const [isProcessingSpeech, setIsProcessingSpeech] = useState(false);
   const [conversationAnalysis, setConversationAnalysis] = useState<AnalysisType | null>(null);
-  const [openAIService, setOpenAIService] = useState<SupabaseOpenAIService | null>(null);
   const [webSpeechService, setWebSpeechService] = useState<WebSpeechService | null>(null);
-  const [elevenLabsService, setElevenLabsService] = useState<ElevenLabsService | null>(null);
   const [microphonePermission, setMicrophonePermission] = useState(false);
-  const [elevenLabsAvailable, setElevenLabsAvailable] = useState(false);
-  const [showSystemMonitor, setShowSystemMonitor] = useState(false);
+  const [aiServiceAvailable, setAiServiceAvailable] = useState(false);
   const [isGeneratingResponse, setIsGeneratingResponse] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -77,13 +74,7 @@ export const EnglishTeacher = () => {
       try {
         const speechService = new WebSpeechService();
         setWebSpeechService(speechService);
-        
-        const aiService = new SupabaseOpenAIService();
-        setOpenAIService(aiService);
-        
-        const ttsService = new ElevenLabsService();
-        setElevenLabsService(ttsService);
-        
+
         // Check microphone permission gracefully
         try {
           const permissionStatus = await navigator.permissions?.query({ name: 'microphone' as PermissionName });
@@ -97,14 +88,17 @@ export const EnglishTeacher = () => {
           // Fallback for browsers that don't support permissions API
           setMicrophonePermission(false);
         }
-        
-        // Test ElevenLabs availability silently (background test)
+
+        // Test AI service availability silently (background test)
         try {
-          const isAvailable = await ttsService.testService();
-          setElevenLabsAvailable(isAvailable);
+          const isAvailable = await aiService.isAvailable();
+          setAiServiceAvailable(isAvailable);
+          if (!isAvailable) {
+            console.warn('AI service not available - please check Ollama/Groq configuration');
+          }
         } catch (error) {
-          console.log('ElevenLabs not available, will use browser speech');
-          setElevenLabsAvailable(false);
+          console.error('AI service check failed:', error);
+          setAiServiceAvailable(false);
         }
       } catch (error) {
         console.error('Error initializing services:', error);
@@ -112,7 +106,7 @@ export const EnglishTeacher = () => {
         handleErrorWithToast(error, 'Some features may not work properly. Please refresh the page.');
       }
     };
-    
+
     initServices();
     
     // Check for session-only user info (no persistence across browser sessions)
@@ -143,23 +137,7 @@ export const EnglishTeacher = () => {
       setSpeechQueue(prev => prev.slice(1));
 
       try {
-        if (elevenLabsService) {
-          try {
-            console.log(`Attempting ElevenLabs speech with voice: ${selectedVoice}...`);
-            await elevenLabsService.speak(item.text, selectedVoice);
-            console.log('ElevenLabs speech completed successfully');
-          } catch (error) {
-            console.error('ElevenLabs failed, falling back to Web Speech:', error);
-            if (webSpeechService) {
-              try {
-                await webSpeechService.speak(item.text);
-                console.log('Web Speech fallback completed');
-              } catch (fallbackError) {
-                console.error('All speech services failed:', fallbackError);
-              }
-            }
-          }
-        } else if (webSpeechService) {
+        if (webSpeechService) {
           try {
             console.log('Using Web Speech service...');
             await webSpeechService.speak(item.text);
@@ -178,7 +156,7 @@ export const EnglishTeacher = () => {
     };
 
     processSpeechQueue();
-  }, [speechQueue, isProcessingSpeech, voicesMuted, elevenLabsService, webSpeechService, selectedVoice]);
+  }, [speechQueue, isProcessingSpeech, voicesMuted, webSpeechService]);
 
   const addMessage = useCallback((text: string, isTeacher: boolean): string => {
     const id = Date.now().toString();
@@ -222,19 +200,19 @@ export const EnglishTeacher = () => {
     setSelectedTopic(topic);
     setMessages([]); // Clear previous messages
     setAppState('conversation');
-    
+
     // Analytics tracking
     analytics.trackConversationStart(topic.title, userInfo?.level || 'intermediate');
-    
+
+    // Mark that user practiced today (for notification tracking)
+    markPracticeToday();
+
     // Add brief welcome message - student should be the main speaker
     addMessage(`Hi ${userInfo?.name}! Ready to talk about ${topic.title}?`, true);
   };
 
   const handleMuteAllVoices = () => {
     // Stop any ongoing speech immediately
-    if (elevenLabsService) {
-      elevenLabsService.stopSpeaking();
-    }
     if (webSpeechService) {
       webSpeechService.stopSpeaking();
     }
@@ -243,7 +221,7 @@ export const EnglishTeacher = () => {
     // Clear the speech queue
     setSpeechQueue([]);
     setVoicesMuted(true);
-    
+
     toast({
       title: "All voices muted",
       description: "System voices have been silenced",
@@ -262,27 +240,20 @@ export const EnglishTeacher = () => {
 
   const handleEndConversation = async () => {
     // Stop any ongoing speech
-    if (elevenLabsService) {
-      elevenLabsService.stopSpeaking();
-    }
     if (webSpeechService) {
       webSpeechService.stopSpeaking();
       webSpeechService.stopListening();
     }
     setIsSpeaking(false);
     setIsListening(false);
-    
-    if (openAIService && userInfo && selectedTopic) {
-      const userMessages = messages
-        .filter(msg => !msg.isTeacher)
-        .map(msg => msg.text);
-      
+
+    if (userInfo && selectedTopic) {
       setIsAnalyzing(true);
       try {
-        const analysis = await openAIService.analyzeConversation(
-          userMessages,
-          selectedTopic.title,
-          userInfo.name
+        const analysis = await aiService.analyzeConversation(
+          messages.map(m => ({ text: m.text, isTeacher: m.isTeacher })),
+          userInfo.name,
+          userInfo.level
         );
         setConversationAnalysis(analysis);
         setAppState('analysis');
@@ -346,9 +317,6 @@ export const EnglishTeacher = () => {
 
   const handleVolumeChange = (newVolume: number) => {
     setVolume(newVolume);
-    if (elevenLabsService) {
-      elevenLabsService.setVolume(newVolume);
-    }
     if (webSpeechService) {
       webSpeechService.setVolume(newVolume);
     }
@@ -397,28 +365,24 @@ export const EnglishTeacher = () => {
         const userMsgId = addMessage(transcript, false);
         
         // Process correction and teacher response sequentially to prevent parallel messages
-        if (openAIService) {
+        if (aiServiceAvailable) {
           setIsGeneratingResponse(true);
           try {
             // First, check for errors and provide correction if needed
-            const correction = await openAIService.correctText(transcript, selectedTopic?.title || "", userInfo?.level || "intermediate");
-            
-            if (correction.hasErrors) {
-              const funCorrection = await openAIService.generateFunCorrection(
-                correction,
-                userInfo?.name || "Student"
-              );
-              // Add the correction and wait for it to complete speaking
-              addMessage(funCorrection, true);
-              
+            const correction = await aiService.correctText(transcript, selectedTopic?.title || "");
+
+            if (correction.hasErrors && correction.errors.length > 0) {
+              // Create a simple correction message
+              const correctionMsg = `Quick tip: "${correction.correctedText}" - ${correction.errors[0].explanation}`;
+              addMessage(correctionMsg, true);
+
               // Wait a moment for the correction to be processed
               await new Promise(resolve => setTimeout(resolve, 500));
             }
-            
+
             // Then generate teacher response
-            const teacherResponse = await openAIService.generateTeacherResponse(
-              transcript,
-              messages,
+            const teacherResponse = await aiService.generateTeacherResponse(
+              messages.map(m => ({ text: m.text, isTeacher: m.isTeacher })),
               selectedTopic?.title || "",
               userInfo?.name || "Student",
               userInfo?.level || "intermediate"
@@ -472,28 +436,24 @@ export const EnglishTeacher = () => {
       const userMsgId = addMessage(userMessage, false);
       
       // Process correction and teacher response sequentially to prevent parallel messages
-      if (openAIService) {
+      if (aiServiceAvailable) {
         setIsGeneratingResponse(true);
         try {
           // First, check for errors and provide correction if needed
-          const correction = await openAIService.correctText(userMessage, selectedTopic?.title || "", userInfo?.level || "intermediate");
+          const correction = await aiService.correctText(userMessage, selectedTopic?.title || "");
           
-          if (correction.hasErrors) {
-            const funCorrection = await openAIService.generateFunCorrection(
-              correction,
-              userInfo?.name || "Student"
-            );
-            // Add the correction and wait for it to complete speaking
-            addMessage(funCorrection, true);
-            
+          if (correction.hasErrors && correction.errors.length > 0) {
+            // Create a simple correction message
+            const correctionMsg = `Quick tip: "${correction.correctedText}" - ${correction.errors[0].explanation}`;
+            addMessage(correctionMsg, true);
+
             // Wait a moment for the correction to be processed
             await new Promise(resolve => setTimeout(resolve, 500));
           }
-          
+
           // Then generate teacher response
-          const teacherResponse = await openAIService.generateTeacherResponse(
-            userMessage,
-            messages,
+          const teacherResponse = await aiService.generateTeacherResponse(
+            messages.map(m => ({ text: m.text, isTeacher: m.isTeacher })),
             selectedTopic?.title || "",
             userInfo?.name || "Student",
             userInfo?.level || "intermediate"
@@ -535,35 +495,32 @@ export const EnglishTeacher = () => {
 
   const handleExitToSetup = useCallback(() => {
     // Stop all speech immediately
-    if (elevenLabsService) {
-      elevenLabsService.stopSpeaking();
-    }
     if (webSpeechService) {
       webSpeechService.stopSpeaking();
       webSpeechService.stopListening();
     }
-    
+
     // Clear speech queue and reset speech states
     setSpeechQueue([]);
     setIsProcessingSpeech(false);
     setIsSpeaking(false);
     setIsListening(false);
-    
+
     // Reset all state to start fresh
     setUserInfo(null);
     setSelectedTopic(null);
     setMessages([]);
     setAppState('setup');
     setConversationAnalysis(null);
-    
+
     // Clear session storage
     sessionStorage.removeItem('englishTeacher_userInfo');
-    
+
     toast({
       title: "Session ended",
       description: "You've been returned to the setup screen.",
     });
-  }, [elevenLabsService, webSpeechService, toast]);
+  }, [webSpeechService, toast]);
 
   // Render different states
   if (appState === 'setup') {
@@ -670,7 +627,7 @@ export const EnglishTeacher = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
             <StatusIndicator
               webSpeechSupported={webSpeechService?.isSupported() || false}
-              elevenLabsAvailable={elevenLabsAvailable}
+              aiServiceAvailable={aiServiceAvailable}
               microphonePermission={microphonePermission}
             />
             
@@ -832,25 +789,6 @@ export const EnglishTeacher = () => {
         </div>
       </div>
 
-      {/* System Monitor Dashboard */}
-      <SystemMonitorDashboard 
-        isVisible={showSystemMonitor}
-        onToggle={() => setShowSystemMonitor(!showSystemMonitor)}
-      />
-
-      {/* System Monitor Toggle (only show when not visible) */}
-      {!showSystemMonitor && (
-        <Button
-          onClick={() => setShowSystemMonitor(true)}
-          variant="outline"
-          size="sm"
-          className="fixed bottom-4 left-4 z-40 text-xs sm:text-sm"
-        >
-          <Shield className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-          <span className="hidden sm:inline">System Monitor</span>
-          <span className="sm:hidden">Monitor</span>
-        </Button>
-      )}
     </div>
   );
 };

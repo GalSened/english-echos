@@ -1,4 +1,6 @@
-import { Home, Settings, BarChart3, Palette, Info } from "lucide-react";
+import { Home, Settings, BarChart3, Palette, Info, Bell } from "lucide-react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 
 import {
   Sidebar,
@@ -11,7 +13,16 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { ThemeSelectorCompact } from "./ThemeSelectorCompact";
+import { NotificationSettings } from "./NotificationSettings";
 
 const navigationItems = [
   { title: "Practice", url: "/", icon: Home },
@@ -23,9 +34,10 @@ const navigationItems = [
 export function AppSidebar() {
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   return (
-    <Sidebar 
+    <Sidebar
       className="border-r bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
       collapsible="icon"
     >
@@ -51,12 +63,35 @@ export function AppSidebar() {
             <SidebarMenu>
               {navigationItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton tooltip={item.title} className="w-full">
-                    <item.icon className="h-4 w-4" />
-                    {!isCollapsed && <span>{item.title}</span>}
+                  <SidebarMenuButton tooltip={item.title} className="w-full" asChild>
+                    <Link to={item.url}>
+                      <item.icon className="h-4 w-4" />
+                      {!isCollapsed && <span>{item.title}</span>}
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+
+              {/* Notifications Settings */}
+              <SidebarMenuItem>
+                <Dialog open={notificationsOpen} onOpenChange={setNotificationsOpen}>
+                  <DialogTrigger asChild>
+                    <SidebarMenuButton tooltip="Notifications" className="w-full">
+                      <Bell className="h-4 w-4" />
+                      {!isCollapsed && <span>Notifications</span>}
+                    </SidebarMenuButton>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Daily Practice Reminders</DialogTitle>
+                      <DialogDescription>
+                        Configure when you want to receive reminders to practice English
+                      </DialogDescription>
+                    </DialogHeader>
+                    <NotificationSettings />
+                  </DialogContent>
+                </Dialog>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
