@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpeakEng - Offline</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      text-align: center;
+    }
+
+    .icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px;
+      background: #f3f4f6;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+      color: #1f2937;
+    }
+
+    p {
+      font-size: 16px;
+      color: #6b7280;
+      line-height: 1.6;
+      margin-bottom: 30px;
+    }
+
+    .features {
+      text-align: left;
+      margin: 30px 0;
+      padding: 20px;
+      background: #f9fafb;
+      border-radius: 10px;
+    }
+
+    .features h3 {
+      font-size: 18px;
+      margin-bottom: 15px;
+      color: #374151;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 14px;
+      color: #6b7280;
+    }
+
+    .feature-item::before {
+      content: "✓";
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      background: #10b981;
+      color: white;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 24px;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+
+    .button {
+      display: inline-block;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 14px 28px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 16px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: none;
+      cursor: pointer;
+    }
+
+    .button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .status {
+      margin-top: 20px;
+      padding: 12px;
+      background: #fef3c7;
+      border-left: 4px solid #f59e0b;
+      border-radius: 6px;
+      font-size: 14px;
+      color: #92400e;
+      text-align: left;
+    }
+
+    @media (max-width: 640px) {
+      .container {
+        padding: 30px 20px;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+
+      p {
+        font-size: 14px;
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    .checking {
+      animation: pulse 2s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">📡</div>
+    <h1>You're Offline</h1>
+    <p>SpeakEng requires an internet connection to access AI features and sync your progress.</p>
+
+    <div class="features">
+      <h3>While you wait, remember:</h3>
+      <div class="feature-item">AI conversation analysis requires connectivity</div>
+      <div class="feature-item">Your progress will sync when back online</div>
+      <div class="feature-item">Previously cached pages may still be available</div>
+    </div>
+
+    <button class="button" onclick="checkConnection()">Try Again</button>
+
+    <div class="status" id="status" style="display: none;">
+      <span id="status-text">Checking connection...</span>
+    </div>
+  </div>
+
+  <script>
+    // Check connection status
+    function updateConnectionStatus() {
+      const statusDiv = document.getElementById('status');
+      const statusText = document.getElementById('status-text');
+
+      if (navigator.onLine) {
+        statusDiv.style.display = 'block';
+        statusDiv.style.background = '#d1fae5';
+        statusDiv.style.borderColor = '#10b981';
+        statusDiv.style.color = '#065f46';
+        statusText.textContent = '✓ Connection restored! Refreshing...';
+
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 1000);
+      } else {
+        statusDiv.style.display = 'block';
+        statusDiv.style.background = '#fee2e2';
+        statusDiv.style.borderColor = '#ef4444';
+        statusDiv.style.color = '#991b1b';
+        statusText.textContent = '✗ Still offline. Please check your connection.';
+      }
+    }
+
+    function checkConnection() {
+      const statusDiv = document.getElementById('status');
+      const statusText = document.getElementById('status-text');
+
+      statusDiv.style.display = 'block';
+      statusDiv.style.background = '#fef3c7';
+      statusDiv.style.borderColor = '#f59e0b';
+      statusDiv.style.color = '#92400e';
+      statusText.textContent = 'Checking connection...';
+      statusText.className = 'checking';
+
+      setTimeout(() => {
+        statusText.className = '';
+        updateConnectionStatus();
+      }, 1000);
+    }
+
+    // Auto-check connection every 5 seconds
+    setInterval(() => {
+      if (navigator.onLine) {
+        updateConnectionStatus();
+      }
+    }, 5000);
+
+    // Listen for online/offline events
+    window.addEventListener('online', updateConnectionStatus);
+    window.addEventListener('offline', () => {
+      const statusDiv = document.getElementById('status');
+      const statusText = document.getElementById('status-text');
+
+      statusDiv.style.display = 'block';
+      statusDiv.style.background = '#fee2e2';
+      statusDiv.style.borderColor = '#ef4444';
+      statusDiv.style.color = '#991b1b';
+      statusText.textContent = '✗ Connection lost';
+    });
+  </script>
+</body>
+</html>
